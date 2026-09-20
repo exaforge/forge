@@ -1151,7 +1151,15 @@ impl ToolRegistryBuilder {
             let mut definition = entry.metadata.versioned_definition(
                 contract_version.as_deref(),
                 &client_name,
-                tool_config.description_override.as_deref(),
+                super::inference_efficiency::compact_description(
+                    tool_config.description_override.as_deref(),
+                    entry.metadata.tool_namespace(),
+                    &entry.id,
+                    contract_version.as_deref(),
+                    std::env::var("FORGE_COMPACT_TOOL_DESCRIPTIONS")
+                        .ok()
+                        .as_deref(),
+                ),
                 &renderer,
                 &param_map,
                 &entry.input_schema,

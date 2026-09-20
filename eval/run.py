@@ -32,6 +32,7 @@ ALLOWED_ENV = {"FORGE_PROMPT_CACHE", "FORGE_CONTEXT_FAST_PATH", "GROK_SAMPLER_SH
                "FORGE_BATCH_READS",
                "FORGE_TOOL_OUTPUT_BUDGET",
                "FORGE_ROUND_CONTEXT",
+               "FORGE_COMPACT_TOOL_DESCRIPTIONS",
                "GROK_POOL_MAX_IDLE", "GROK_POOL_IDLE_TIMEOUT_SECS", "GROK_CONNECT_TIMEOUT_SECS"}
 USAGE_FIELDS = ("input_tokens", "output_tokens", "cached_input_tokens",
                 "cache_creation_input_tokens", "reasoning_tokens", "total_tokens")

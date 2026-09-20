@@ -203,6 +203,18 @@ class EvaluatorTests(unittest.TestCase):
         self.assertEqual(scoped["disallowed_tool_ids"], ["search_tool", "use_tool"])
         self.assertEqual(optimized["env"]["FORGE_PROMPT_CACHE"], "0")
         self.assertEqual(local["env"], baseline["env"])
+        flags = {"forge-output-budget-only": "FORGE_TOOL_OUTPUT_BUDGET",
+                 "forge-round-context-only": "FORGE_ROUND_CONTEXT",
+                 "forge-batch-reads-only": "FORGE_BATCH_READS",
+                 "forge-compact-descriptions-only": "FORGE_COMPACT_TOOL_DESCRIPTIONS"}
+        for name, flag in flags.items():
+            profile = profiles[name]
+            self.assertEqual(profile["argv"], optimized["argv"])
+            self.assertEqual(profile["env"], optimized["env"] | {flag: "1"})
+            self.assertEqual(profile["effort"], "medium")
+            self.assertEqual(profile["model"], optimized["model"])
+        self.assertEqual(profiles["forge-coding-v2"]["env"], optimized["env"] | dict.fromkeys(flags.values(), "1"))
+        self.assertEqual(profiles["forge-coding-v2"]["effort"], "medium")
         for profile in (optimized, local):
             self.assertEqual(profile["model"], baseline["model"])
             self.assertEqual(profile["effort"], baseline["effort"])

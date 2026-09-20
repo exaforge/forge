@@ -81,6 +81,26 @@ tasks; rewriting a later request suffix can also reduce cache reuse. Native
 `request_context` records count omitted copies currently present in each request
 and tool-description bytes, without retaining source or descriptions themselves.
 
+`forge-compact-descriptions-only` enables `FORGE_COMPACT_TOOL_DESCRIPTIONS=1`:
+shorter default descriptions for the current native read, grep and directory
+listing tools. Input schemas, available tools, edit/execute safeguards, custom
+descriptions and legacy versions remain unchanged. `forge-coding-v2` combines
+all four new switches with `forge-optimized`; all profiles keep GPT-5.6 Sol and
+medium reasoning. The single-switch profiles enable one new optimization on
+that same local-coding baseline. None of these switches is enabled by default.
+
+For a quick paired coding slice (five tasks, one attempt per configuration):
+
+```sh
+python3 eval/run.py run --profiles /absolute/path/profiles.json \
+  --profile forge-optimized --profile forge-coding-v2 --repeats 1 \
+  --timeout 600 --max-turns 20 --output eval/results/coding-v2
+```
+
+This is a smoke comparison, not enough repetitions to attribute small changes
+or establish equal quality. Use the individual-switch profiles and additional
+tasks before drawing a causal performance conclusion.
+
 ```sh
 python3 eval/run.py run --profiles /absolute/path/profiles.json \
   --profile forge-baseline --profile forge-optimized \

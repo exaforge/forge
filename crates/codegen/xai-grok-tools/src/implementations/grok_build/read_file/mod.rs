@@ -180,15 +180,19 @@ fn resolve_read_start_line(file_content: &str, offset: Option<i64>) -> usize {
 fn stored_read_offset(offset: Option<i64>) -> Option<usize> {
     offset.filter(|&o| o >= 0).map(|o| o as usize)
 }
-/// Files read in full (no line/token cap): any file named exactly `SKILL.md`,
+/// Files read in full (no line/token cap): any file named `SKILL.md` (case-insensitive),
 /// plus any Markdown file with a `skills` path component so docs a `SKILL.md`
 /// references are never silently truncated. `.`/`..` are folded lexically
-/// (symlinks are not resolved). Intentionally broader than
+/// here; the caller checks both requested and canonical paths. Intentionally broader than
 /// skill discovery's dir check — matches any `skills` segment
 /// (plugin/bundled/user roots), and matches it exactly (not case-folded) so
 /// near-misses like `skills-cursor` do not qualify.
 fn is_skill_markdown(path: &std::path::Path) -> bool {
-    if path.file_name().is_some_and(|n| n == "SKILL.md") {
+    if path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.eq_ignore_ascii_case("SKILL.md"))
+    {
         return true;
     }
     let is_md = path
@@ -374,7 +378,7 @@ pub(crate) async fn run_read_file(
         hints_enabled = res.get::<PathNotFoundHints>().is_some_and(|h| h.0);
     }
     let joined_path = resolve_model_path(&cwd, display_cwd.as_deref(), &input.path);
-    let is_skill_markdown = is_skill_markdown(&joined_path);
+    let requested_skill_markdown = is_skill_markdown(&joined_path);
     let (path, _unicode_note) = match crate::util::fs::try_canonicalize(&joined_path).await {
         Ok(p) => (p, None),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -385,6 +389,9 @@ pub(crate) async fn run_read_file(
         }
         Err(_) => (joined_path, None),
     };
+    // An alias to a skill must keep its full-read behavior; a skill-directory
+    // alias to an ordinary path must not lose that behavior after resolution.
+    let is_skill_markdown = requested_skill_markdown || is_skill_markdown(&path);
     let version = ReadFileVersion::from_contract(contract_version);
     let is_legacy = version.is_legacy();
     let skip_gitignore = is_legacy && versions::legacy_0_4_10::allows_gitignored_reads();
@@ -2072,6 +2079,63 @@ pub fn verify(req: &HttpRequest) -> Result<Claims, Error> {
                 assert_eq!(fc.limit, None);
             }
             other => panic!("Expected FileContent, got {:?}", other),
+        }
+    }
+    #[test]
+    fn tool_output_budget_skill_predicate_accepts_filename_case_variants() {
+        for name in ["SKILL.md", "skill.md", "SkIlL.Md", "skills/reference.MD"] {
+            assert!(is_skill_markdown(std::path::Path::new(name)), "{name}");
+        }
+        for name in ["SKILL.txt", "my-SKILL.md", "skills-cursor/reference.md"] {
+            assert!(!is_skill_markdown(std::path::Path::new(name)), "{name}");
+        }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn tool_output_budget_skill_aliases_keep_full_reads() {
+        let tmp = TempDir::new().unwrap();
+        let original = (1..=1200)
+            .map(|line| format!("line_{line:04} {}", "x".repeat(200)))
+            .collect::<Vec<_>>()
+            .join("\n");
+        for (target, alias) in [
+            ("SKILL.md", "skill-alias.md"),
+            ("sKiLl.Md", "case-alias.md"),
+            ("skills/reference.md", "reference-alias.md"),
+            ("ordinary.md", "skills/original-path-alias.md"),
+        ] {
+            let target = tmp.path().join(target);
+            let alias = tmp.path().join(alias);
+            std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+            std::fs::create_dir_all(alias.parent().unwrap()).unwrap();
+            std::fs::write(&target, &original).unwrap();
+            std::os::unix::fs::symlink(&target, &alias).unwrap();
+            for limit in [None, Some(1)] {
+                let mut resources = test_resources(tmp.path());
+                resources.insert(ToolOutputBudget(true));
+                let input = ReadFileInput {
+                    path: alias.to_string_lossy().into_owned(),
+                    offset: Some(3),
+                    limit,
+                    pages: None,
+                    format: None,
+                };
+                let result = xai_tool_runtime::Tool::run(
+                    &ReadFileTool,
+                    test_ctx(resources.into_shared()),
+                    input,
+                )
+                .await
+                .unwrap();
+                let ReadFileOutput::FileContent(output) = result else {
+                    panic!("skill alias must return full text")
+                };
+                assert_eq!(output.raw_output, original);
+                assert_eq!(output.offset, None);
+                assert_eq!(output.limit, None);
+                assert!(!output.content.contains("Default output budget"));
+            }
         }
     }
     #[tokio::test]

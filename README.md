@@ -95,6 +95,13 @@ opt-in. These results do not establish an overall advantage over Codex or faster
 server-side decoding. Claude Code was not tested. See the
 [per-task results, native TTFT/output rates, limitations and retained evidence](eval/evidence/2026-09-20/README.md).
 
+A subsequent [ten-attempt check of four additional opt-in optimizations](eval/evidence/2026-09-20/coding-v2.md)
+passed all five tasks under both profiles. Tool descriptions were 23.7% smaller,
+but the combined profile used more total tokens and took longer overall in that
+small sample. It is experimental; no additional task-speed improvement is claimed.
+The [Harbor integration](eval/harbor/README.md) provides a separate container-based
+path to external task verification.
+
 ## Authentication and models
 
 The exact model roster depends on the providers configured and authenticated for

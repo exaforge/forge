@@ -1,0 +1,148 @@
+{
+  "forge-optimized": {
+    "attempts": 5,
+    "passes": 5,
+    "median_wall_seconds": 36.24219466700001,
+    "total_wall_seconds": 225.565454834,
+    "median_successful_wall_seconds": 36.24219466700001,
+    "total_input_tokens_including_cache": 111448,
+    "total_cached_input_tokens": 57472,
+    "total_output_tokens": 7364,
+    "median_requests": 6,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 5
+    },
+    "per_task": {
+      "bug-fix": {
+        "passes": 1,
+        "wall_seconds": [
+          28.216329417
+        ],
+        "median_wall_seconds": 28.216329417,
+        "median_input_tokens": 17708
+      },
+      "exploration-change": {
+        "passes": 1,
+        "wall_seconds": [
+          80.437287834
+        ],
+        "median_wall_seconds": 80.437287834,
+        "median_input_tokens": 36277
+      },
+      "multi-file-feature": {
+        "passes": 1,
+        "wall_seconds": [
+          45.96915
+        ],
+        "median_wall_seconds": 45.96915,
+        "median_input_tokens": 24940
+      },
+      "refactor": {
+        "passes": 1,
+        "wall_seconds": [
+          36.24219466700001
+        ],
+        "median_wall_seconds": 36.24219466700001,
+        "median_input_tokens": 17929
+      },
+      "test-diagnosis": {
+        "passes": 1,
+        "wall_seconds": [
+          34.700492916
+        ],
+        "median_wall_seconds": 34.700492916,
+        "median_input_tokens": 14594
+      }
+    },
+    "total_requests": 31,
+    "median_first_request_input_tokens": 2522,
+    "advertised_tool_counts": [
+      6
+    ],
+    "median_request_interval_union_fraction_of_wall": 0.9404246205606863,
+    "median_run_median_request_build_ms": 0.060458000000000005,
+    "median_run_median_sampler_prepare_ms": 0.744875,
+    "pooled_text_ttft_ms": 2784.8017499999996,
+    "text_ttft_samples": 5,
+    "pooled_first_generation_ms": 3495.639625,
+    "pooled_request_output_tokens_per_second": 32.61555140638214,
+    "pooled_generation_window_tokens_per_second": 71.4505540242114,
+    "tool_description_bytes": [
+      2731
+    ],
+    "max_reduced_read_results_in_a_request": 0
+  },
+  "forge-coding-v2": {
+    "attempts": 5,
+    "passes": 5,
+    "median_wall_seconds": 46.003441083,
+    "total_wall_seconds": 381.962712749,
+    "median_successful_wall_seconds": 46.003441083,
+    "total_input_tokens_including_cache": 124288,
+    "total_cached_input_tokens": 29184,
+    "total_output_tokens": 8670,
+    "median_requests": 6,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 5
+    },
+    "per_task": {
+      "bug-fix": {
+        "passes": 1,
+        "wall_seconds": [
+          31.966508125
+        ],
+        "median_wall_seconds": 31.966508125,
+        "median_input_tokens": 15757
+      },
+      "exploration-change": {
+        "passes": 1,
+        "wall_seconds": [
+          217.346859208
+        ],
+        "median_wall_seconds": 217.346859208,
+        "median_input_tokens": 37386
+      },
+      "multi-file-feature": {
+        "passes": 1,
+        "wall_seconds": [
+          39.45598075
+        ],
+        "median_wall_seconds": 39.45598075,
+        "median_input_tokens": 21639
+      },
+      "refactor": {
+        "passes": 1,
+        "wall_seconds": [
+          47.189923583
+        ],
+        "median_wall_seconds": 47.189923583,
+        "median_input_tokens": 29760
+      },
+      "test-diagnosis": {
+        "passes": 1,
+        "wall_seconds": [
+          46.003441083
+        ],
+        "median_wall_seconds": 46.003441083,
+        "median_input_tokens": 19746
+      }
+    },
+    "total_requests": 32,
+    "median_first_request_input_tokens": 2344,
+    "advertised_tool_counts": [
+      6
+    ],
+    "median_request_interval_union_fraction_of_wall": 0.9405326330934993,
+    "median_run_median_request_build_ms": 0.072271,
+    "median_run_median_sampler_prepare_ms": 0.76125,
+    "pooled_text_ttft_ms": 1527.511,
+    "text_ttft_samples": 5,
+    "pooled_first_generation_ms": 2644.587542,
+    "pooled_request_output_tokens_per_second": 36.416780731675175,
+    "pooled_generation_window_tokens_per_second": 63.57278287567462,
+    "tool_description_bytes": [
+      2083
+    ],
+    "max_reduced_read_results_in_a_request": 0
+  }
+}

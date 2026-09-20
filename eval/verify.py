@@ -17,6 +17,20 @@ import sys
 
 sys.dont_write_bytecode = True
 
+# Fixed public identifiers only: the runner allowlists these before retention.
+CHECK_LABELS = {
+    "bug-fix": {f"{kind}-{i}" for kind in ("ranges", "input-preserved") for i in range(5)},
+    "multi-file-feature": {"grouped-revenue", "empty-revenue", "original-total", "cli-group", "cli-group-empty", "cli-total"},
+    "test-diagnosis": {"successful-value", "attempt-count", "exhaustion", "exhaustion-counts",
+                       "exception-filter-original", "nonretryable-single-call", "no-wait-on-other",
+                       "invalid-attempts", "invalid-attempts-no-call", "single-attempt",
+                       "original-final-exception", "custom-retry-type"},
+    "exploration-change": {"cli-precedence", "config-precedence", "env-precedence", "empty-env-is-explicit",
+                           "ambient-env", "none-falls-through", "invalid-selected-value", "mapping-preservation"},
+    "refactor": {f"quote_{kind}-{check}" for kind in ("regular", "student", "senior")
+                 for check in ("arithmetic", "validation")} | {"shared-local-helper", "no-float-arithmetic"},
+}
+
 
 class Checks:
     def __init__(self):

@@ -176,6 +176,10 @@ hashed before and after execution. Tampering is an integrity error. This arrange
 is **not an OS security boundary against hostile code**; use a container or stronger
 sandbox before evaluating adversarial submissions.
 
+New runs retain allowlisted public failed-check identifiers and a fixed exception
+category to help diagnose failures without saving submitted source or error text.
+Earlier evidence snapshots retain their original, less detailed schema.
+
 `execution.duration_ms` spans process launch through process-group cleanup. Leader
 exit and cleanup are recorded separately when available. Output-drain/parsing and
 verifier time are separate. Timeouts terminate the entire POSIX process group;

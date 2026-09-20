@@ -22,6 +22,7 @@ import time
 import uuid
 
 from fixtures import TASKS, materialize
+from verify import CHECK_LABELS
 
 HERE = Path(__file__).resolve().parent
 CAPTURE_LIMIT = 8 * 1024 * 1024
@@ -454,7 +455,7 @@ def verify(task_id, workspace, verifier, expected_hash, timeout):
     results = parse_objects(stdout)
     result = results[-1] if results else {}
     valid = type(result.get("passed")) is bool and type(result.get("checks_total")) is int \
-        and type(result.get("checks_passed")) is int and result["checks_total"] >= 0 \
+        and type(result.get("checks_passed")) is int and 0 <= result["checks_passed"] <= result["checks_total"] \
         and (result["checks_total"] > 0 or result.get("error") == "submission_exception")
     if not integrity:
         status, passed = "integrity_error", None
@@ -465,9 +466,14 @@ def verify(task_id, workspace, verifier, expected_hash, timeout):
     else:
         passed = result["passed"] and state["exit_code"] == 0
         status = "passed" if passed else "failed"
+    failed = result.get("failed_checks")
+    labels = [label for label in failed[:256] if isinstance(label, str) and label in CHECK_LABELS[task_id]] \
+        if valid and integrity and isinstance(failed, list) else None
     return {"status": status, "passed": passed, "duration_ms": (time.monotonic_ns() - started) / 1e6,
             "checks_passed": result.get("checks_passed") if valid else None,
             "checks_total": result.get("checks_total") if valid else None,
+            "failed_checks": labels,
+            "error_category": "submission_exception" if valid and result.get("error") == "submission_exception" else None,
             "verifier_sha256": expected_hash, "integrity_preserved": integrity}
 
 

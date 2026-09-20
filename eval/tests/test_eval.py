@@ -103,6 +103,18 @@ class EvaluatorTests(unittest.TestCase):
         self.assertEqual(result["verification"]["status"], "integrity_error")
         self.assertIsNone(result["verification"]["passed"])
 
+    def test_verifier_failure_labels_are_retained_without_arbitrary_payloads(self):
+        result, _ = self.attempt("fail")
+        self.assertTrue(result["verification"]["failed_checks"])
+        verifier = EVAL / "verify.py"
+        payload = {"passed": False, "checks_total": 2, "checks_passed": 0,
+                   "failed_checks": ["ranges-1", "DO_NOT_PERSIST", {"secret": "DO_NOT_PERSIST"}],
+                   "error": "DO_NOT_PERSIST"}
+        with patch.object(run, "execute", return_value=({"status": "process_error", "exit_code": 1}, json.dumps(payload))):
+            verified = run.verify("bug-fix", self.root, verifier, run.file_digest(verifier), 1)
+        self.assertEqual(verified["failed_checks"], ["ranges-1"])
+        self.assertNotIn("DO_NOT_PERSIST", json.dumps(verified))
+
     def test_provided_tests_cannot_be_modified_or_deleted_but_new_tests_allowed(self):
         for mode in ("change-tests", "delete-tests", "add-tests"):
             with self.subTest(mode=mode):

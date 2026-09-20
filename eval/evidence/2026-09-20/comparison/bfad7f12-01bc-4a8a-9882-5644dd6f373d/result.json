@@ -1,0 +1,123 @@
+{
+  "collection": {
+    "discarded_records": 0,
+    "status": "observed"
+  },
+  "constraints": {
+    "changed_or_missing_provided_tests": [],
+    "provided_tests_unchanged": true
+  },
+  "execution": {
+    "cleanup_ms": 0.048334,
+    "duration_ms": 102631.055667,
+    "exit_code": 0,
+    "leader_exit_ms": 102631.002167,
+    "output_drain_ms": 0.074167,
+    "output_truncated": false,
+    "signal": null,
+    "started_at": "2026-09-20T22:31:15.863898+00:00",
+    "status": "completed"
+  },
+  "execution_order": 27,
+  "kind": "forge",
+  "native": {
+    "attempt_count": 11,
+    "collector_health_complete": true,
+    "collector_reported_loss": false,
+    "duplicate_attempts": false,
+    "end_to_end_output_rate_samples": 11,
+    "end_to_end_rate_scope": "reported output tokens / whole sampler attempt duration, including initial wait; not server decode speed",
+    "first_generation_samples": 11,
+    "median_end_to_end_output_tokens_per_second": 31.61060925660399,
+    "median_first_generation_event_ms": 6070.6085410000005,
+    "median_first_text_ms": 2429.031042,
+    "median_observed_output_tokens_per_second": 79.99127984041432,
+    "median_request_duration_ms": 7934.621958,
+    "observed_models": [
+      "gpt-5.6-sol"
+    ],
+    "output_rate_samples": 11,
+    "phase_scope": "observed overlapping client intervals; not additive wall-time or CPU breakdown",
+    "phase_summary": {
+      "headless": {
+        "median_duration_ms": 102410.789584,
+        "samples": 1
+      },
+      "prompt": {
+        "median_duration_ms": 102023.45925,
+        "samples": 1
+      },
+      "request_build": {
+        "median_duration_ms": 0.087958,
+        "samples": 11
+      },
+      "sampler_prepare": {
+        "median_duration_ms": 1.085459,
+        "samples": 11
+      },
+      "stream_drain": {
+        "median_duration_ms": 0.069708,
+        "samples": 11
+      },
+      "tool_dispatch": {
+        "median_duration_ms": 2.3201665,
+        "samples": 18
+      },
+      "tool_prepare": {
+        "median_duration_ms": 1.458729,
+        "samples": 10
+      }
+    },
+    "rate_scope": "client-observed approximation, includes reported reasoning/tool output; not server decode speed",
+    "request_count": 11,
+    "retries_scheduled": 0,
+    "text_ttft_samples": 1,
+    "throughput_unavailable_reasons": {},
+    "total_tokens_scope": "provider-reported; may be context length, do not interpret as billed tokens",
+    "usage": {
+      "cache_creation_input_tokens": null,
+      "cached_input_tokens": 54656,
+      "input_tokens": 97550,
+      "observed_cache_creation_input_tokens": null,
+      "observed_cached_input_tokens": 54656,
+      "observed_input_tokens": 97550,
+      "observed_output_tokens": 3233,
+      "observed_reasoning_tokens": 1542,
+      "observed_total_tokens": 100783,
+      "output_tokens": 3233,
+      "reasoning_tokens": 1542,
+      "total_tokens": 100783
+    },
+    "usage_coverage": "complete_for_observed_sampler_attempts",
+    "usage_scope": "sampler_actor_only; input includes cache, output includes reasoning; auxiliary direct calls excluded"
+  },
+  "profile": "forge-baseline",
+  "protocol": {
+    "status": "completed",
+    "terminal_events": 1,
+    "usage": {
+      "cache_creation_input_tokens": 0,
+      "cached_input_tokens": 54656,
+      "input_tokens": 42894,
+      "output_tokens": 3233,
+      "reasoning_tokens": 1542,
+      "total_tokens": 100783
+    },
+    "usage_coverage": "complete_for_reported_scope",
+    "usage_scope": "headless_prompt_ledger_uncached_input_auxiliary_calls_excluded"
+  },
+  "repetition": 2,
+  "run_id": "bfad7f12-01bc-4a8a-9882-5644dd6f373d",
+  "schema_version": 1,
+  "successful_verified_run": true,
+  "task": "exploration-change",
+  "verification": {
+    "checks_passed": 16,
+    "checks_total": 16,
+    "duration_ms": 79.439833,
+    "integrity_preserved": true,
+    "passed": true,
+    "status": "passed",
+    "verifier_sha256": "bae41102173149e8c9757662e6f39d97c62348ba66d1b8a75d9771073c1fd6ba"
+  }
+}

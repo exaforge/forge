@@ -1,0 +1,123 @@
+{
+  "collection": {
+    "discarded_records": 0,
+    "status": "observed"
+  },
+  "constraints": {
+    "changed_or_missing_provided_tests": [],
+    "provided_tests_unchanged": true
+  },
+  "execution": {
+    "cleanup_ms": 0.048542,
+    "duration_ms": 45536.164,
+    "exit_code": 0,
+    "leader_exit_ms": 45536.110958,
+    "output_drain_ms": 0.060208,
+    "output_truncated": false,
+    "signal": null,
+    "started_at": "2026-09-20T22:27:46.176427+00:00",
+    "status": "completed"
+  },
+  "execution_order": 23,
+  "kind": "forge",
+  "native": {
+    "attempt_count": 6,
+    "collector_health_complete": true,
+    "collector_reported_loss": false,
+    "duplicate_attempts": false,
+    "end_to_end_output_rate_samples": 6,
+    "end_to_end_rate_scope": "reported output tokens / whole sampler attempt duration, including initial wait; not server decode speed",
+    "first_generation_samples": 6,
+    "median_end_to_end_output_tokens_per_second": 33.74746801802178,
+    "median_first_generation_event_ms": 2858.2046665,
+    "median_first_text_ms": 2529.558208,
+    "median_observed_output_tokens_per_second": 62.36424307246856,
+    "median_request_duration_ms": 5298.114396,
+    "observed_models": [
+      "gpt-5.6-sol"
+    ],
+    "output_rate_samples": 6,
+    "phase_scope": "observed overlapping client intervals; not additive wall-time or CPU breakdown",
+    "phase_summary": {
+      "headless": {
+        "median_duration_ms": 45293.234541,
+        "samples": 1
+      },
+      "prompt": {
+        "median_duration_ms": 44968.110250000005,
+        "samples": 1
+      },
+      "request_build": {
+        "median_duration_ms": 0.0560835,
+        "samples": 6
+      },
+      "sampler_prepare": {
+        "median_duration_ms": 0.6964999999999999,
+        "samples": 6
+      },
+      "stream_drain": {
+        "median_duration_ms": 0.061625,
+        "samples": 6
+      },
+      "tool_dispatch": {
+        "median_duration_ms": 11.081667,
+        "samples": 9
+      },
+      "tool_prepare": {
+        "median_duration_ms": 1.065542,
+        "samples": 5
+      }
+    },
+    "rate_scope": "client-observed approximation, includes reported reasoning/tool output; not server decode speed",
+    "request_count": 6,
+    "retries_scheduled": 0,
+    "text_ttft_samples": 1,
+    "throughput_unavailable_reasons": {},
+    "total_tokens_scope": "provider-reported; may be context length, do not interpret as billed tokens",
+    "usage": {
+      "cache_creation_input_tokens": null,
+      "cached_input_tokens": 12544,
+      "input_tokens": 20904,
+      "observed_cache_creation_input_tokens": null,
+      "observed_cached_input_tokens": 12544,
+      "observed_input_tokens": 20904,
+      "observed_output_tokens": 1607,
+      "observed_reasoning_tokens": 416,
+      "observed_total_tokens": 22511,
+      "output_tokens": 1607,
+      "reasoning_tokens": 416,
+      "total_tokens": 22511
+    },
+    "usage_coverage": "complete_for_observed_sampler_attempts",
+    "usage_scope": "sampler_actor_only; input includes cache, output includes reasoning; auxiliary direct calls excluded"
+  },
+  "profile": "forge-optimized",
+  "protocol": {
+    "status": "completed",
+    "terminal_events": 1,
+    "usage": {
+      "cache_creation_input_tokens": 0,
+      "cached_input_tokens": 12544,
+      "input_tokens": 8360,
+      "output_tokens": 1607,
+      "reasoning_tokens": 416,
+      "total_tokens": 22511
+    },
+    "usage_coverage": "complete_for_reported_scope",
+    "usage_scope": "headless_prompt_ledger_uncached_input_auxiliary_calls_excluded"
+  },
+  "repetition": 2,
+  "run_id": "487e99fb-614c-4b7a-bcf3-0d089a00984f",
+  "schema_version": 1,
+  "successful_verified_run": false,
+  "task": "test-diagnosis",
+  "verification": {
+    "checks_passed": 17,
+    "checks_total": 20,
+    "duration_ms": 78.729292,
+    "integrity_preserved": true,
+    "passed": false,
+    "status": "failed",
+    "verifier_sha256": "bae41102173149e8c9757662e6f39d97c62348ba66d1b8a75d9771073c1fd6ba"
+  }
+}

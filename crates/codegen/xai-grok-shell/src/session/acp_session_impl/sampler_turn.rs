@@ -1166,14 +1166,22 @@ impl SessionActor {
         self: &Arc<Self>,
         request: ConversationRequest,
     ) -> Result<SamplerTurnOutcome, acp::Error> {
+        let request_id = xai_grok_sampler::RequestId::random();
+        let request_id_str = request_id.as_str().to_string();
+        let preparation = crate::observation::Phase::start("sampler_prepare", || {
+            serde_json::json!({
+                "session_id": self.session_info.id.0.as_ref(),
+                "request_id": request_id_str,
+                "turn_number": self.current_turn_number.get(),
+            })
+        });
         self.prepare_sampler_for_turn().await;
+        preparation.finish("completed");
         let stream_drained_rx = {
             let (tx, rx) = tokio::sync::oneshot::channel();
             *self.turn_stream_drained.lock() = Some(tx);
             rx
         };
-        let request_id = xai_grok_sampler::RequestId::random();
-        let request_id_str = request_id.as_str().to_string();
         match self
             .sampler_handle
             .submit_and_collect(request_id, request)
@@ -1188,10 +1196,22 @@ impl SessionActor {
                 if metrics.attempts > 0 {
                     span.record("attempt", i64::from(metrics.attempts));
                 }
-                if tokio::time::timeout(std::time::Duration::from_secs(5), stream_drained_rx)
-                    .await
-                    .is_err()
-                {
+                let drain = crate::observation::Phase::start("stream_drain", || {
+                    serde_json::json!({
+                        "session_id": self.session_info.id.0.as_ref(),
+                        "request_id": request_id_str,
+                    })
+                });
+                let drain_result =
+                    tokio::time::timeout(std::time::Duration::from_secs(5), stream_drained_rx)
+                        .await;
+                let drain_timed_out = drain_result.is_err();
+                drain.finish(match drain_result {
+                    Ok(Ok(())) => "completed",
+                    Ok(Err(_)) => "channel_closed",
+                    Err(_) => "timeout",
+                });
+                if drain_timed_out {
                     self.turn_stream_drained.lock().take();
                     tracing::warn!(
                         "stream-drain barrier timed out; proceeding to emit tool \

@@ -1,0 +1,121 @@
+{
+  "collection": {
+    "discarded_records": null,
+    "status": "unavailable"
+  },
+  "constraints": {
+    "changed_or_missing_provided_tests": [],
+    "provided_tests_unchanged": true
+  },
+  "execution": {
+    "cleanup_ms": 0.070583,
+    "duration_ms": 44934.519958,
+    "exit_code": 0,
+    "leader_exit_ms": 44934.441667,
+    "output_drain_ms": 0.088959,
+    "output_truncated": false,
+    "signal": null,
+    "started_at": "2026-09-20T22:32:58.591573+00:00",
+    "status": "completed"
+  },
+  "execution_order": 28,
+  "kind": "codex",
+  "native": {
+    "attempt_count": null,
+    "collector_health_complete": false,
+    "collector_reported_loss": false,
+    "duplicate_attempts": false,
+    "end_to_end_output_rate_samples": 0,
+    "end_to_end_rate_scope": "reported output tokens / whole sampler attempt duration, including initial wait; not server decode speed",
+    "first_generation_samples": 0,
+    "median_end_to_end_output_tokens_per_second": null,
+    "median_first_generation_event_ms": null,
+    "median_first_text_ms": null,
+    "median_observed_output_tokens_per_second": null,
+    "median_request_duration_ms": null,
+    "observed_models": [],
+    "output_rate_samples": 0,
+    "phase_scope": "observed overlapping client intervals; not additive wall-time or CPU breakdown",
+    "phase_summary": {
+      "headless": {
+        "median_duration_ms": null,
+        "samples": 0
+      },
+      "prompt": {
+        "median_duration_ms": null,
+        "samples": 0
+      },
+      "request_build": {
+        "median_duration_ms": null,
+        "samples": 0
+      },
+      "sampler_prepare": {
+        "median_duration_ms": null,
+        "samples": 0
+      },
+      "stream_drain": {
+        "median_duration_ms": null,
+        "samples": 0
+      },
+      "tool_dispatch": {
+        "median_duration_ms": null,
+        "samples": 0
+      },
+      "tool_prepare": {
+        "median_duration_ms": null,
+        "samples": 0
+      }
+    },
+    "rate_scope": "client-observed approximation, includes reported reasoning/tool output; not server decode speed",
+    "request_count": null,
+    "retries_scheduled": null,
+    "text_ttft_samples": 0,
+    "throughput_unavailable_reasons": {},
+    "total_tokens_scope": "provider-reported; may be context length, do not interpret as billed tokens",
+    "usage": {
+      "cache_creation_input_tokens": null,
+      "cached_input_tokens": null,
+      "input_tokens": null,
+      "observed_cache_creation_input_tokens": null,
+      "observed_cached_input_tokens": null,
+      "observed_input_tokens": null,
+      "observed_output_tokens": null,
+      "observed_reasoning_tokens": null,
+      "observed_total_tokens": null,
+      "output_tokens": null,
+      "reasoning_tokens": null,
+      "total_tokens": null
+    },
+    "usage_coverage": "unavailable",
+    "usage_scope": "sampler_actor_only; input includes cache, output includes reasoning; auxiliary direct calls excluded"
+  },
+  "profile": "codex-direct",
+  "protocol": {
+    "status": "completed",
+    "terminal_events": 1,
+    "usage": {
+      "cache_creation_input_tokens": null,
+      "cached_input_tokens": 86016,
+      "input_tokens": 95989,
+      "output_tokens": 1646,
+      "reasoning_tokens": null,
+      "total_tokens": null
+    },
+    "usage_coverage": "complete_for_reported_scope",
+    "usage_scope": "codex_cli_reported_turn_usage_input_includes_cache"
+  },
+  "repetition": 2,
+  "run_id": "5176e8a6-4069-4537-aacc-93995db8c64e",
+  "schema_version": 1,
+  "successful_verified_run": true,
+  "task": "refactor",
+  "verification": {
+    "checks_passed": 35,
+    "checks_total": 35,
+    "duration_ms": 76.942,
+    "integrity_preserved": true,
+    "passed": true,
+    "status": "passed",
+    "verifier_sha256": "bae41102173149e8c9757662e6f39d97c62348ba66d1b8a75d9771073c1fd6ba"
+  }
+}

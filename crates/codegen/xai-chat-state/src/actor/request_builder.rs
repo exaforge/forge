@@ -1,7 +1,7 @@
 //! ConversationRequest assembly — image compaction, pruning, repair, memory injection.
 
 use xai_grok_sampling_types::{
-    ContentPart, ConversationItem, ConversationRequest, ToolSpec, TraceContext,
+    ApiBackend, ContentPart, ConversationItem, ConversationRequest, ToolSpec, TraceContext,
 };
 
 use super::ChatStateActor;
@@ -16,6 +16,34 @@ pub(super) const HARD_CLEAR_PLACEHOLDER: &str = "[Tool result omitted — too ol
 
 /// Separator inserted between head and tail in soft-trimmed results.
 const SOFT_TRIM_SEPARATOR: &str = "\n\n[…trimmed…]\n\n";
+
+/// Optional cache-group experiment for compatible Responses endpoints. This
+/// does not enable caching or guarantee hits. GPT-5.6+ routes automatically;
+/// a key separates reuse/accounting groups and may reduce cross-session reuse.
+/// Older providers may use it for routing. Off unless FORGE_PROMPT_CACHE=1.
+///
+/// Shell session IDs are UUIDs. Accept only their canonical, hyphenated shape
+/// so this key cannot accidentally disclose a path or other arbitrary caller
+/// data. Non-UUID conversation IDs keep the baseline behavior. Request IDs,
+/// prompt text and credentials never contribute to the key.
+fn session_prompt_cache_key(
+    backend: &ApiBackend,
+    conv_id: &str,
+    flag: Option<&str>,
+) -> Option<String> {
+    if flag != Some("1") || !backend.forwards_prompt_cache_key() {
+        return None;
+    }
+    let is_uuid = conv_id.len() == 36
+        && conv_id.bytes().enumerate().all(|(index, byte)| {
+            if matches!(index, 8 | 13 | 18 | 23) {
+                byte == b'-'
+            } else {
+                byte.is_ascii_hexdigit()
+            }
+        });
+    is_uuid.then(|| format!("forge-v1:{}", conv_id.to_ascii_lowercase()))
+}
 
 impl ChatStateActor {
     /// Build a `ConversationRequest` from the current actor state.
@@ -68,8 +96,12 @@ impl ChatStateActor {
         // Eviction rewrites earlier turns and busts the KV-cache prefix, so we
         // only pay it when the body is actually near the limit (the original
         // behavior — evicting every turn — caused chronic cache misses).
-        let body_bytes = conversation_body_bytes(&self.state.conversation);
         let inline_images = inline_image_count(&self.state.conversation);
+        let body_bytes = request_body_bytes(
+            &self.state.conversation,
+            inline_images,
+            std::env::var("FORGE_CONTEXT_FAST_PATH").ok().as_deref(),
+        );
         let needs_image_compaction = body_bytes >= IMAGE_COMPACT_TRIGGER_BYTES;
         let needs_mutation = needs_prune || memory_reminder.is_some() || needs_image_compaction;
 
@@ -124,6 +156,13 @@ impl ChatStateActor {
             });
         }
 
+        // Cache grouping metadata only: preserve conversation and tool ordering.
+        let prompt_cache_key = session_prompt_cache_key(
+            &self.state.sampling_config.api_backend,
+            &conv_id,
+            std::env::var("FORGE_PROMPT_CACHE").ok().as_deref(),
+        );
+
         // Step 4: Assemble request
         ConversationRequest {
             items,
@@ -142,7 +181,7 @@ impl ChatStateActor {
             x_grok_deployment_id: None,
             x_grok_user_id: None,
             trace,
-            prompt_cache_key: None,
+            prompt_cache_key,
             reasoning_effort: self.state.sampling_config.reasoning_effort,
             json_schema: None,
         }
@@ -361,6 +400,22 @@ fn conversation_body_bytes(conversation: &[ConversationItem]) -> usize {
     serialized_json_bytes(&blanked) + image_url_bytes
 }
 
+/// Image-free requests need no temporary copy with image URLs blanked. Keep
+/// the existing path as the default for controlled comparisons, and reuse the
+/// image count the request builder already computes for its budget event.
+/// Both paths count the same JSON bytes; this does not trim or reorder input.
+fn request_body_bytes(
+    conversation: &[ConversationItem],
+    inline_images: usize,
+    flag: Option<&str>,
+) -> usize {
+    if flag == Some("1") && inline_images == 0 {
+        serialized_json_bytes(conversation)
+    } else {
+        conversation_body_bytes(conversation)
+    }
+}
+
 /// Replace the oldest inline images with [`IMAGE_COMPACT_PLACEHOLDER`] until
 /// the serialized request body drops back to `target_bytes`, keeping the
 /// newest images. `current_bytes` is the already-measured whole-body size (see
@@ -525,6 +580,236 @@ fn safe_char_slice_tail(s: &str, count: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const CACHE_SESSION_ID: &str = "9e984794-a340-4125-85df-778d81ff5249";
+
+    #[test]
+    fn context_fast_path_preserves_exact_image_free_body_size() {
+        let conversation = vec![
+            ConversationItem::system("Stable system prompt 日本語"),
+            ConversationItem::user("A \"quoted\" path \\ and\nnewlines\tand\0controls"),
+            ConversationItem::assistant("Read the file and keep its contents unchanged."),
+            ConversationItem::tool_result("call-1", "large tool result\n".repeat(10_000)),
+        ];
+        let expected = serde_json::to_vec(&conversation).unwrap().len();
+        for flag in [None, Some("0"), Some("1"), Some("true")] {
+            assert_eq!(request_body_bytes(&conversation, 0, flag), expected);
+            assert_eq!(request_body_bytes(&[], 0, flag), 2);
+        }
+    }
+
+    #[test]
+    fn context_fast_path_preserves_image_budget_and_eviction_boundary() {
+        let mut small = ConversationItem::user("Keep this image.");
+        small.add_image("data:image/png;base64,AAAA");
+        let large = user_with_image_of_bytes("large", IMAGE_COMPACT_TRIGGER_BYTES);
+        for conversation in [vec![small], vec![large]] {
+            let count = inline_image_count(&conversation);
+            let baseline = request_body_bytes(&conversation, count, None);
+            let optimized = request_body_bytes(&conversation, count, Some("1"));
+            assert_eq!(baseline, optimized);
+            assert_eq!(baseline, serde_json::to_vec(&conversation).unwrap().len());
+            let mut baseline_items = conversation.clone();
+            let mut optimized_items = conversation.clone();
+            if baseline >= IMAGE_COMPACT_TRIGGER_BYTES {
+                compact_images_to_byte_budget(
+                    &mut baseline_items,
+                    baseline,
+                    IMAGE_COMPACT_RECLAIM_TARGET_BYTES,
+                );
+            }
+            if optimized >= IMAGE_COMPACT_TRIGGER_BYTES {
+                compact_images_to_byte_budget(
+                    &mut optimized_items,
+                    optimized,
+                    IMAGE_COMPACT_RECLAIM_TARGET_BYTES,
+                );
+            }
+            assert_eq!(
+                serde_json::to_value(&baseline_items).unwrap(),
+                serde_json::to_value(&optimized_items).unwrap(),
+            );
+        }
+    }
+
+    /// Measures only local body-size preparation, not HTTP, inference, TTFT or
+    /// provider cache hits. Use --release and --nocapture for useful timings.
+    #[test]
+    #[ignore = "manual request preparation microbenchmark"]
+    fn benchmark_context_body_size_fast_path() {
+        use std::hint::black_box;
+        use std::time::Instant;
+
+        const SAMPLES: usize = 11;
+        const ITERATIONS: u32 = 10;
+        let text = "Read src/parser.rs and preserve the public API.\n\
+                    Tool output includes \"quotes\", paths, and Unicode: 日本語.\n"
+            .repeat(90);
+        // Include a small task-sized history and two larger stress cases.
+        for item_count in [10, 100, 1_000] {
+            let conversation = (0..item_count)
+                .map(|index| match index % 3 {
+                    0 => ConversationItem::user(text.clone()),
+                    1 => ConversationItem::assistant(text.clone()),
+                    _ => ConversationItem::tool_result(format!("call-{index}"), text.clone()),
+                })
+                .collect::<Vec<_>>();
+            let measure = |flag| {
+                let start = Instant::now();
+                for _ in 0..ITERATIONS {
+                    let items = black_box(conversation.as_slice());
+                    let count = inline_image_count(items);
+                    black_box(request_body_bytes(items, count, flag));
+                }
+                start.elapsed() / ITERATIONS
+            };
+            let baseline_bytes = request_body_bytes(&conversation, 0, None);
+            assert_eq!(
+                baseline_bytes,
+                request_body_bytes(&conversation, 0, Some("1")),
+            );
+            measure(None);
+            measure(Some("1"));
+            let mut baseline = Vec::with_capacity(SAMPLES);
+            let mut optimized = Vec::with_capacity(SAMPLES);
+            for sample in 0..SAMPLES {
+                // Alternate order to reduce warmup/thermal bias.
+                if sample % 2 == 0 {
+                    baseline.push(measure(None));
+                    optimized.push(measure(Some("1")));
+                } else {
+                    optimized.push(measure(Some("1")));
+                    baseline.push(measure(None));
+                }
+            }
+            baseline.sort();
+            optimized.sort();
+            let baseline = baseline[SAMPLES / 2].as_secs_f64();
+            let optimized = optimized[SAMPLES / 2].as_secs_f64();
+            eprintln!(
+                "context_body_size items={item_count} bytes={baseline_bytes} \
+                 baseline_median_us={:.2} optimized_median_us={:.2} speedup={:.3}x",
+                baseline * 1_000_000.0,
+                optimized * 1_000_000.0,
+                baseline / optimized,
+            );
+        }
+    }
+
+    #[test]
+    fn prompt_cache_requires_explicit_opt_in_and_responses_backend() {
+        for flag in [None, Some("0"), Some(""), Some("true"), Some(" 1")] {
+            assert_eq!(
+                session_prompt_cache_key(&ApiBackend::Responses, CACHE_SESSION_ID, flag),
+                None,
+            );
+        }
+        for backend in [ApiBackend::ChatCompletions, ApiBackend::Messages] {
+            assert_eq!(
+                session_prompt_cache_key(&backend, CACHE_SESSION_ID, Some("1")),
+                None,
+            );
+        }
+    }
+
+    #[test]
+    fn prompt_cache_identity_is_stable_and_session_scoped() {
+        let key = session_prompt_cache_key(&ApiBackend::Responses, CACHE_SESSION_ID, Some("1"));
+        assert_eq!(key, Some(format!("forge-v1:{CACHE_SESSION_ID}")));
+        assert_eq!(
+            key,
+            session_prompt_cache_key(&ApiBackend::Responses, CACHE_SESSION_ID, Some("1")),
+        );
+        assert_eq!(
+            key,
+            session_prompt_cache_key(
+                &ApiBackend::Responses,
+                &CACHE_SESSION_ID.to_uppercase(),
+                Some("1"),
+            ),
+        );
+        assert_ne!(
+            key,
+            session_prompt_cache_key(
+                &ApiBackend::Responses,
+                "fa305619-c7dd-4b17-8e73-d2f519a50b51",
+                Some("1"),
+            ),
+        );
+    }
+
+    #[test]
+    fn prompt_cache_rejects_arbitrary_or_malformed_session_ids() {
+        for id in [
+            "",
+            "conv-1",
+            "/Users/example/private-project",
+            "9e984794a340412585df778d81ff5249",
+            "9e984794_a340-4125-85df-778d81ff5249",
+            "9e984794-a340-4125-85df-778d81ff524z",
+            "9e984794-a340-4125-85df-778d81ff5249/secret",
+        ] {
+            assert_eq!(
+                session_prompt_cache_key(&ApiBackend::Responses, id, Some("1")),
+                None,
+            );
+        }
+    }
+
+    #[test]
+    fn prompt_cache_only_changes_routing_metadata_on_responses_wire() {
+        let baseline = ConversationRequest {
+            items: vec![
+                ConversationItem::system("Stable system prompt"),
+                ConversationItem::user("Keep every message and schema unchanged."),
+            ],
+            // Deliberately non-alphabetic order: the cache hint must not sort tools.
+            tools: ["z_read", "a_write"]
+                .map(|name| ToolSpec {
+                    name: name.into(),
+                    description: Some("Unchanged tool description".into()),
+                    parameters: serde_json::json!({
+                        "type": "object",
+                        "properties": { "path": { "type": "string" } },
+                        "required": ["path"],
+                    }),
+                })
+                .into(),
+            model: Some("test-model".into()),
+            max_output_tokens: Some(256),
+            x_grok_conv_id: Some(CACHE_SESSION_ID.into()),
+            x_grok_req_id: Some("request-1".into()),
+            ..Default::default()
+        };
+        let mut optimized = baseline.clone();
+        optimized.prompt_cache_key =
+            session_prompt_cache_key(&ApiBackend::Responses, CACHE_SESSION_ID, Some("1"));
+        let mut baseline_wire =
+            serde_json::to_value(xai_grok_sampling_types::rs::CreateResponse::from(&baseline))
+                .unwrap();
+        let mut optimized_wire = serde_json::to_value(
+            xai_grok_sampling_types::rs::CreateResponse::from(&optimized),
+        )
+        .unwrap();
+        assert_eq!(
+            optimized_wire
+                .as_object_mut()
+                .unwrap()
+                .remove("prompt_cache_key"),
+            Some(serde_json::json!(format!("forge-v1:{CACHE_SESSION_ID}"))),
+        );
+        baseline_wire
+            .as_object_mut()
+            .unwrap()
+            .remove("prompt_cache_key");
+        assert_eq!(baseline_wire, optimized_wire);
+
+        optimized.x_grok_req_id = Some("request-2".into());
+        assert_eq!(
+            xai_grok_sampling_types::rs::CreateResponse::from(&optimized).prompt_cache_key,
+            Some(format!("forge-v1:{CACHE_SESSION_ID}")),
+        );
+    }
 
     #[test]
     fn should_prune_gating() {

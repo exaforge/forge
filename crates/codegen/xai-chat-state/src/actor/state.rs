@@ -278,6 +278,7 @@ mod tests {
             context_window: std::num::NonZeroU64::new(128_000).unwrap(),
             reasoning_effort: None,
             stream_tool_calls: None,
+            fast_mode: None,
         }
     }
 

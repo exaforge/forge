@@ -1,0 +1,70 @@
+{
+  "category": "exploration plus change",
+  "configuration": {
+    "declared_optimization_env": {},
+    "forge_config_sha256": null,
+    "limits": {
+      "external_max_turns": "profile-dependent; Codex has no equivalent flag",
+      "max_turns": 20,
+      "timeout_seconds": 600.0,
+      "verifier_timeout_seconds": 30
+    },
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "service_tier": "not_observed",
+    "tool_scope": {
+      "mode": "profile_defined",
+      "requested_tool_ids": null
+    }
+  },
+  "created_at": "2026-09-20T22:18:04.966225+00:00",
+  "execution_order": 12,
+  "kind": "codex",
+  "machine": {
+    "architecture": "arm64",
+    "python_version": "3.12.11",
+    "release": "25.6.0",
+    "system": "Darwin"
+  },
+  "privacy": {
+    "authentication_store_read_or_copied_by_runner": false,
+    "raw_stdout_stderr_retained": false,
+    "workspace_retained": false
+  },
+  "profile": "codex-direct",
+  "repetition": 1,
+  "run_id": "09240f82-0d7b-4c91-9152-357161e7a0da",
+  "schema_version": 1,
+  "software": {
+    "build_profile": "bundled_cli",
+    "executable": "codex",
+    "executable_sha256": "9280c0754e8f1f6b72f495d30c8c82a006dbc4995bf0492916fa0901f6bfd1f9",
+    "profile_sha256": "1966304e992a5eddffbd1929c9e0d223b2e1c6614aa1490e9e5337499e1d023b",
+    "source": {
+      "revision": "aff540e8df2671c0f1488fc22c5ccf26f28271e3",
+      "scope": "checkout at runner start; executable_sha256 identifies the executed artifact",
+      "tracked_diff_sha256": "ac3228e09c3630f7c8b910699371887874ee249247b8a4e9b0b59e3079a89809",
+      "untracked_files_sha256": "6989ee1211894b9de1293a6b2a6b64a05cd422374fe35ddf7edf80ce7832c0b3"
+    },
+    "version": "codex-cli 0.155.0-alpha.9.2"
+  },
+  "state": {
+    "account_quota": "not_observed",
+    "ambient_optimization_keys": "cleared_before_profile_overrides",
+    "external_global_state": "not_isolated; see profile flags",
+    "fixture_prompt_sha256": "bbc24feedb9a345329bc0006f6da5a7db9979d5c82fdec063614e03627c398ba",
+    "forge_home": "not_applicable",
+    "initial_workspace_sha256": "3d2d67dca0762b5515ba1bbc80934d615e16d1d2b0a27644642d9fe25a47f98c",
+    "managed_configuration": "retained",
+    "memory": "profile_defined",
+    "provided_test_sha256": {
+      "test_public.py": "2ee4d06dc8ca1dab7eb7ca0836fbce2b57998453a3358a01c139e20c4140a6ec"
+    },
+    "provider_cache": "not_controlled; report usage when available",
+    "session": "fresh",
+    "skill_context_discovery": "inherited_host_discovery_not_isolated",
+    "workspace": "fresh_temporary_copy"
+  },
+  "task": "exploration-change",
+  "verifier_sha256": "bae41102173149e8c9757662e6f39d97c62348ba66d1b8a75d9771073c1fd6ba"
+}

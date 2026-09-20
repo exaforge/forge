@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-20",
+  "hardware": "Apple M4 Pro",
+  "os": "macOS 26.6.2",
+  "rust": "1.94.0",
+  "build_profile": "release",
+  "command": "cargo +1.94.0 test --release --locked -p xai-chat-state -p xai-grok-sampler --lib -- --ignored --nocapture",
+  "context_body_size": {
+    "scope": "image-free exact JSON byte counting only; not request, inference, or task time",
+    "method": "11 samples of 10 iterations, alternating baseline/optimized order",
+    "rows": [
+      {"items": 10, "bytes": 103099, "baseline_median_us": 59.19, "optimized_median_us": 57.72, "speedup": 1.026},
+      {"items": 100, "bytes": 1030969, "baseline_median_us": 461.01, "optimized_median_us": 446.48, "speedup": 1.033},
+      {"items": 1000, "bytes": 10309969, "baseline_median_us": 4544.96, "optimized_median_us": 4466.17, "speedup": 1.018}
+    ]
+  },
+  "collector": {
+    "scope": "synthetic collector only, in-memory writer; excludes disk and inference",
+    "records_requested": 10000,
+    "disabled_gate_ns_per_record": 0.6208,
+    "enabled_record_ns_per_record": 4115.4584,
+    "flush_ms": 0.0755,
+    "records_written": 10000,
+    "dropped_records": 0,
+    "write_failures": 0
+  }
+}

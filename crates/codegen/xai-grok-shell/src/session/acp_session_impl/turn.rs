@@ -2136,6 +2136,14 @@ impl SessionActor {
                 });
             }
             let build_req_start = std::time::Instant::now();
+            let request_build = crate::observation::Phase::start("request_build", || {
+                serde_json::json!({
+                    "session_id": self.session_info.id.0.as_ref(),
+                    "prompt_id": req_id,
+                    "loop_index": loop_index,
+                    "context_fast_path": std::env::var("FORGE_CONTEXT_FAST_PATH").as_deref() == Ok("1"),
+                })
+            });
             let request = self
                 .chat_state_handle
                 .build_request(
@@ -2155,6 +2163,7 @@ impl SessionActor {
                 )
                 .await
                 .expect("chat state actor should be alive");
+            request_build.finish("completed");
             xai_grok_telemetry::unified_log::debug(
                 "shell.turn.build_request_done",
                 Some(self.session_info.id.0.as_ref()),

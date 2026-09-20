@@ -1,0 +1,226 @@
+{
+  "forge-baseline": {
+    "attempts": 15,
+    "passes": 15,
+    "median_wall_seconds": 67.03663291699999,
+    "total_wall_seconds": 1116.668953792,
+    "median_successful_wall_seconds": 67.03663291699999,
+    "total_input_tokens_including_cache": 1282787,
+    "total_cached_input_tokens": 727552,
+    "total_output_tokens": 31486,
+    "median_requests": 10,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 15
+    },
+    "per_task": {
+      "bug-fix": {
+        "passes": 3,
+        "wall_seconds": [
+          52.721825333,
+          60.858153375,
+          63.052631874999996
+        ],
+        "median_wall_seconds": 60.858153375,
+        "median_input_tokens": 69383
+      },
+      "exploration-change": {
+        "passes": 3,
+        "wall_seconds": [
+          87.419252375,
+          102.631055667,
+          120.81557108300001
+        ],
+        "median_wall_seconds": 102.631055667,
+        "median_input_tokens": 97550
+      },
+      "multi-file-feature": {
+        "passes": 3,
+        "wall_seconds": [
+          66.468914667,
+          67.417970334,
+          71.035416666
+        ],
+        "median_wall_seconds": 67.417970334,
+        "median_input_tokens": 93629
+      },
+      "refactor": {
+        "passes": 3,
+        "wall_seconds": [
+          56.970364374999996,
+          60.735464,
+          75.42471541600001
+        ],
+        "median_wall_seconds": 60.735464,
+        "median_input_tokens": 92988
+      },
+      "test-diagnosis": {
+        "passes": 3,
+        "wall_seconds": [
+          66.12832070900001,
+          67.03663291699999,
+          97.952665
+        ],
+        "median_wall_seconds": 67.03663291699999,
+        "median_input_tokens": 85414
+      }
+    },
+    "total_requests": 154,
+    "median_first_request_input_tokens": 6736,
+    "advertised_tool_counts": [
+      23
+    ],
+    "median_request_interval_union_fraction_of_wall": 0.957841815929223,
+    "median_run_median_request_build_ms": 0.083791,
+    "median_run_median_sampler_prepare_ms": 1.052042,
+    "pooled_text_ttft_ms": 2397.2615419999997,
+    "text_ttft_samples": 15,
+    "pooled_first_generation_ms": 4198.114708499999,
+    "pooled_request_output_tokens_per_second": 29.03130109686784,
+    "pooled_generation_window_tokens_per_second": 82.57223356203862
+  },
+  "forge-optimized": {
+    "attempts": 15,
+    "passes": 14,
+    "median_wall_seconds": 39.091073917,
+    "total_wall_seconds": 673.4451218739999,
+    "median_successful_wall_seconds": 38.9619583125,
+    "total_input_tokens_including_cache": 324661,
+    "total_cached_input_tokens": 124288,
+    "total_output_tokens": 22378,
+    "median_requests": 6,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 15
+    },
+    "per_task": {
+      "bug-fix": {
+        "passes": 3,
+        "wall_seconds": [
+          29.940622208,
+          33.881160541,
+          34.401219250000004
+        ],
+        "median_wall_seconds": 33.881160541,
+        "median_input_tokens": 20303
+      },
+      "exploration-change": {
+        "passes": 3,
+        "wall_seconds": [
+          59.479871542,
+          62.930567208,
+          67.78581358299999
+        ],
+        "median_wall_seconds": 62.930567208,
+        "median_input_tokens": 24712
+      },
+      "multi-file-feature": {
+        "passes": 3,
+        "wall_seconds": [
+          39.091073917,
+          48.233203417,
+          55.833152583
+        ],
+        "median_wall_seconds": 48.233203417,
+        "median_input_tokens": 24607
+      },
+      "refactor": {
+        "passes": 3,
+        "wall_seconds": [
+          31.1451185,
+          33.444458749999995,
+          38.832842707999994
+        ],
+        "median_wall_seconds": 33.444458749999995,
+        "median_input_tokens": 17615
+      },
+      "test-diagnosis": {
+        "passes": 2,
+        "wall_seconds": [
+          36.078913125,
+          45.536164,
+          56.83094054199999
+        ],
+        "median_wall_seconds": 45.536164,
+        "median_input_tokens": 20904
+      }
+    },
+    "total_requests": 90,
+    "median_first_request_input_tokens": 2522,
+    "advertised_tool_counts": [
+      6
+    ],
+    "median_request_interval_union_fraction_of_wall": 0.9394032513634518,
+    "median_run_median_request_build_ms": 0.061708,
+    "median_run_median_sampler_prepare_ms": 0.7723955,
+    "pooled_text_ttft_ms": 2861.965666,
+    "text_ttft_samples": 15,
+    "pooled_first_generation_ms": 2934.7532494999996,
+    "pooled_request_output_tokens_per_second": 33.67216819325646,
+    "pooled_generation_window_tokens_per_second": 71.77708835176034
+  },
+  "codex-direct": {
+    "attempts": 15,
+    "passes": 15,
+    "median_wall_seconds": 43.765691874999995,
+    "total_wall_seconds": 639.817173997,
+    "median_successful_wall_seconds": 43.765691874999995,
+    "total_input_tokens_including_cache": 1238452,
+    "total_cached_input_tokens": 1031680,
+    "total_output_tokens": 24111,
+    "median_requests": null,
+    "native_usage_coverage": {
+      "unavailable": 15
+    },
+    "per_task": {
+      "bug-fix": {
+        "passes": 3,
+        "wall_seconds": [
+          29.426437957999998,
+          30.824369291,
+          31.610996
+        ],
+        "median_wall_seconds": 30.824369291,
+        "median_input_tokens": 65029
+      },
+      "exploration-change": {
+        "passes": 3,
+        "wall_seconds": [
+          50.279806791000006,
+          58.731658125,
+          61.276389958
+        ],
+        "median_wall_seconds": 58.731658125,
+        "median_input_tokens": 98111
+      },
+      "multi-file-feature": {
+        "passes": 3,
+        "wall_seconds": [
+          37.262366041,
+          39.478965959,
+          39.864758
+        ],
+        "median_wall_seconds": 39.478965959,
+        "median_input_tokens": 80575
+      },
+      "refactor": {
+        "passes": 3,
+        "wall_seconds": [
+          43.765691874999995,
+          44.390329833,
+          44.934519957999996
+        ],
+        "median_wall_seconds": 44.390329833,
+        "median_input_tokens": 95989
+      },
+      "test-diagnosis": {
+        "passes": 3,
+        "wall_seconds": [
+          37.406111749999994,
+          44.983090540999996,
+          45.581681917000004
+        ],
+        "median_wall_seconds": 44.983090540999996,
+        "median_input_tokens": 79700
+      }
+    }
+  }
+}

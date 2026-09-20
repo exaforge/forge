@@ -26,6 +26,8 @@ pub mod events;
 mod forge;
 pub mod handle;
 pub mod metrics;
+pub mod observation;
+mod request_observation;
 pub mod retry;
 pub mod sampling_log;
 mod shared_http;

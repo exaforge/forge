@@ -1,0 +1,95 @@
+{
+  "category": "bug fix",
+  "configuration": {
+    "declared_optimization_env": {
+      "FORGE_CONTEXT_FAST_PATH": "1",
+      "FORGE_PROMPT_CACHE": "0",
+      "GROK_SAMPLER_SHARED_CLIENT": "1"
+    },
+    "forge_config_sha256": "379a22229b4e94eb20b1ba891a8a64130be34bb28609542cbc1688aac24db8d6",
+    "limits": {
+      "external_max_turns": "profile-dependent; Codex has no equivalent flag",
+      "max_turns": 20,
+      "timeout_seconds": 600.0,
+      "verifier_timeout_seconds": 30
+    },
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "service_tier": "default",
+    "tool_scope": {
+      "disallowed_tool_ids": [
+        "search_tool",
+        "use_tool"
+      ],
+      "mode": "explicit_allowlist",
+      "requested_tool_ids": [
+        "read_file",
+        "search_replace",
+        "write",
+        "apply_patch",
+        "grep",
+        "grep_files",
+        "list_dir",
+        "run_terminal_cmd",
+        "get_task_output",
+        "wait_tasks",
+        "kill_task",
+        "get_terminal_command_output",
+        "kill_terminal_command",
+        "hashline_read",
+        "hashline_edit",
+        "hashline_grep"
+      ]
+    }
+  },
+  "created_at": "2026-09-20T22:37:04.348817+00:00",
+  "execution_order": 33,
+  "kind": "forge",
+  "machine": {
+    "architecture": "arm64",
+    "python_version": "3.12.11",
+    "release": "25.6.0",
+    "system": "Darwin"
+  },
+  "privacy": {
+    "authentication_store_read_or_copied_by_runner": false,
+    "raw_stdout_stderr_retained": false,
+    "workspace_retained": false
+  },
+  "profile": "forge-optimized",
+  "repetition": 3,
+  "run_id": "65b74a69-385f-4917-a626-0eb209e5cbbd",
+  "schema_version": 1,
+  "software": {
+    "build_profile": "release",
+    "executable": "forge",
+    "executable_sha256": "62c7e2ddbaf7c4ce27ebce1434965ceb79aade0fc6af3f337864319a616338af",
+    "profile_sha256": "6eaa38726a716ba05dc8b308c90c163cf8b565086646cda8f815635432e5020d",
+    "source": {
+      "revision": "aff540e8df2671c0f1488fc22c5ccf26f28271e3",
+      "scope": "checkout at runner start; executable_sha256 identifies the executed artifact",
+      "tracked_diff_sha256": "ac3228e09c3630f7c8b910699371887874ee249247b8a4e9b0b59e3079a89809",
+      "untracked_files_sha256": "6989ee1211894b9de1293a6b2a6b64a05cd422374fe35ddf7edf80ce7832c0b3"
+    },
+    "version": "grok 1.0.0 (aff540e)"
+  },
+  "state": {
+    "account_quota": "not_observed",
+    "ambient_optimization_keys": "cleared_before_profile_overrides",
+    "external_global_state": "not_isolated; see profile flags",
+    "fixture_prompt_sha256": "898d0b99ec55474e2401a116fb3c8258eaa2908a1187a68f88a340c033f948b9",
+    "forge_home": "fresh_temporary",
+    "initial_workspace_sha256": "372dbccd09499ffd10c3375ea5574195227ac7226497b95df8509a55ab1337cb",
+    "managed_configuration": "retained",
+    "memory": "disabled",
+    "provided_test_sha256": {
+      "test_public.py": "1e4488da5f234fffb9759f778b51a610e028545cbd58ce2ac90bd35223f1faf0"
+    },
+    "provider_cache": "not_controlled; report usage when available",
+    "session": "fresh",
+    "skill_context_discovery": "inherited_host_discovery_not_isolated",
+    "workspace": "fresh_temporary_copy"
+  },
+  "task": "bug-fix",
+  "verifier_sha256": "bae41102173149e8c9757662e6f39d97c62348ba66d1b8a75d9771073c1fd6ba"
+}

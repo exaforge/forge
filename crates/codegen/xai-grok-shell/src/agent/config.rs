@@ -625,7 +625,7 @@ pub struct RuntimeResolutionContext<'a> {
     pub raw_config: &'a toml::Value,
     pub remote_settings: Option<&'a crate::util::config::RemoteSettings>,
     pub is_headless: bool,
-    /// `Some(true)` = CLI explicitly enabled, `None` = defer to config/env/remote.
+    /// `Some(true/false)` = CLI explicitly enabled/disabled, `None` = defer to config/env.
     pub cli_subagents: Option<bool>,
     pub cli_web_search_model: Option<&'a str>,
     pub cli_session_summary_model: Option<&'a str>,
@@ -1496,7 +1496,7 @@ pub struct Config {
     /// CLI `--no-memory` flag. Stored for `ConfigReloader` hot-reload re-resolution.
     #[serde(skip)]
     pub cli_no_memory: bool,
-    /// Original CLI `--subagents` tri-state, preserved for re-resolution
+    /// Original CLI subagent enable/disable override, preserved for re-resolution
     /// when remote settings settings are refreshed on /new.
     #[serde(skip)]
     pub cli_subagents: Option<bool>,
@@ -1524,7 +1524,7 @@ pub struct Config {
     #[serde(skip)]
     pub cli_agent_overrides: CliAgentOverrides,
     /// Whether subagent (task tool) support is enabled. Enabled by default;
-    /// disabled only via `GROK_SUBAGENTS=0` or `[subagents] enabled = false`.
+    /// disabled via `--no-subagents`, `GROK_SUBAGENTS=0`, or `[subagents] enabled = false`.
     /// Not remotely gated.
     #[serde(skip)]
     pub subagents_enabled: bool,
@@ -2237,6 +2237,11 @@ impl Config {
         self.session_summary_model_override = ctx.cli_session_summary_model.map(|s| s.to_owned());
         let cli_flag = ctx.cli_subagents.unwrap_or(false);
         self.resolve_subagents(cli_flag, ctx.raw_config);
+        // The legacy resolver accepts an enable-only flag. Preserve an explicit
+        // CLI disable here, including when settings refresh re-resolves this config.
+        if ctx.cli_subagents == Some(false) {
+            self.subagents_enabled = false;
+        }
         let env = std::env::var(crate::config::SubagentsConfig::ENV_MAX_DEPTH).ok();
         let toml_max = ctx
             .raw_config
@@ -11823,6 +11828,50 @@ hooks = true
             storage_mode: None,
         });
         assert!(cfg.subagents_enabled);
+    }
+    #[test]
+    #[serial]
+    fn resolve_runtime_fields_subagent_cli_precedence_survives_refresh() {
+        clear_runtime_env_vars();
+        for (configured, env, cli, expected) in [
+            (true, None, Some(false), false),
+            (true, Some("1"), Some(false), false),
+            (false, Some("0"), Some(true), true),
+            (false, None, None, false),
+            (false, Some("1"), None, true),
+            (true, Some("0"), None, false),
+        ] {
+            unsafe {
+                match env {
+                    Some(value) => std::env::set_var("GROK_SUBAGENTS", value),
+                    None => std::env::remove_var("GROK_SUBAGENTS"),
+                }
+            }
+            let raw: toml::Value =
+                toml::from_str(&format!("[subagents]\nenabled = {configured}")).unwrap();
+            let mut cfg = Config::new_from_toml_cfg(&raw).unwrap();
+            cfg.mode = AgentMode::Headless;
+            cfg.resolve_runtime_fields(&RuntimeResolutionContext {
+                raw_config: &raw,
+                remote_settings: None,
+                is_headless: true,
+                cli_subagents: cli,
+                cli_web_search_model: None,
+                cli_session_summary_model: None,
+                cli_experimental_memory: false,
+                cli_no_memory: false,
+                disable_web_search: false,
+                todo_gate: false,
+                laziness_debug_log: None,
+                storage_mode: None,
+            });
+            assert_eq!(cfg.subagents_enabled, expected);
+            assert_eq!(cfg.cli_subagents, cli);
+            cfg.re_resolve_runtime_fields(&raw);
+            assert_eq!(cfg.subagents_enabled, expected);
+            assert_eq!(cfg.cli_subagents, cli);
+        }
+        clear_runtime_env_vars();
     }
     #[test]
     #[serial]

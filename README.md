@@ -74,6 +74,26 @@ Windows x86_64.
 | **Unified sessions** | Browse Forge, Claude Code, and Codex sessions together in `/sessions`. Importing an external row creates a new Forge session with its context. |
 | **Private phone remote** | Open the current Forge session on a phone with `/rc`. Use the bundled browser client or a locally built iOS app over Tailscale Serve. `/rc stop` revokes that session's pairing. |
 | **Adaptive memory** | When enabled, the existing memory lifecycle tracks explicitly stated current work plus durable preferences and corrections, while excluding execution noise. Current instructions always win. |
+| **Inference evaluation** | Opt-in request and phase observations, fresh coding workspaces with independent checks, and controlled context-preparation and local-tool-scope experiments. See [measurement boundaries](docs/inference-evaluation.md) and the [evaluation runner](eval/README.md). |
+
+### Local evaluation snapshot
+
+Five small Python coding tasks, three repetitions each, GPT-5.6 Sol with medium
+reasoning, on an Apple M4 Pro (2026-09-20). Both Forge configurations used the same
+release binary. Totals include every attempt, including the failed task; input
+tokens include the cached subset and are not dollar-cost estimates.
+
+| Configuration | Verified passes | Total task wall time | Reported input tokens |
+|---|---:|---:|---:|
+| Forge baseline | 15/15 | 1,116.7 s | 1,282,787 |
+| Forge local-coding profile + context fast path | 14/15 | 673.4 s | 324,661 |
+| Codex CLI | 15/15 | 639.8 s | 1,238,452 |
+
+The scoped Forge configuration used 39.7% less total wall time and 74.7% fewer
+reported input tokens than baseline, but failed one verification. It remains
+opt-in. These results do not establish an overall advantage over Codex or faster
+server-side decoding. Claude Code was not tested. See the
+[per-task results, native TTFT/output rates, limitations and retained evidence](eval/evidence/2026-09-20/README.md).
 
 ## Authentication and models
 

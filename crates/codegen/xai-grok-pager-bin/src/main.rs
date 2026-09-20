@@ -1021,6 +1021,7 @@ async fn replay_acp_state_after_reconnect(
 /// The TUI has its own signal handler (`app::signal_handler`) that does the
 /// full crossterm teardown.
 fn shutdown_and_flush_telemetry(exit_code: i32) -> ! {
+    xai_grok_shell::observation::flush();
     xai_grok_telemetry::sentry::flush_on_shutdown();
     xai_grok_telemetry::otel_layer::shutdown_otel();
     xai_grok_telemetry::debug_log::flush();
@@ -1834,6 +1835,11 @@ fn main() {
     if dispatch_version_if_requested(&args) || dispatch_doctor_if_requested(&args) {
         return;
     }
+    let process_observation = xai_grok_shell::observation::Phase::start("process_body", || {
+        serde_json::json!({
+            "version": env!("VERSION_WITH_COMMIT"),
+        })
+    });
     xai_grok_pager_minimal::install();
     #[cfg(all(feature = "jemalloc", unix))]
     xai_grok_pager::memory_release::install_release_hook(purge_jemalloc_retained_pages);
@@ -1899,6 +1905,12 @@ fn main() {
             shutdown_and_flush_telemetry(1);
         });
     let result = run_and_shutdown(runtime, async_main(args), RUNTIME_SHUTDOWN_GRACE);
+    process_observation.finish(if result.is_ok() {
+        "completed"
+    } else {
+        "failed"
+    });
+    xai_grok_shell::observation::flush();
     xai_grok_telemetry::debug_log::flush();
     if let Err(e) = result {
         xai_tty_utils::restore_native_stderr();
@@ -2209,6 +2221,8 @@ async fn async_main(args: PagerArgs) -> Result<()> {
             prompt,
             args.verbatim,
             xai_grok_pager::headless::HeadlessOptions {
+                no_memory: args.no_memory,
+                no_subagents: args.no_subagents,
                 session_id: args.session_id.clone(),
                 resume: args.resume_session.or(args.load_session),
                 resume_title_pinned: args.resume_target_pinned,

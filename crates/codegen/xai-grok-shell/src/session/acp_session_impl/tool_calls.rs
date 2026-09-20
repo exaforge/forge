@@ -406,6 +406,13 @@ impl SessionActor {
         deferred_followups: &mut Vec<ConversationItem>,
         final_result: &mut Option<ToolLoop>,
     ) -> Result<(), acp::Error> {
+        let preparation = crate::observation::Phase::start("tool_prepare", || {
+            serde_json::json!({
+                "session_id": self.session_info.id.0.as_ref(),
+                "turn_number": self.current_turn_number.get(),
+                "tool_count": tool_calls.len(),
+            })
+        });
         let mut approved: Vec<PreparedToolCall> = Vec::new();
         for call in tool_calls.into_iter() {
             if final_result.is_some() {
@@ -519,6 +526,7 @@ impl SessionActor {
         let workspace_ops = self.workspace_ops.clone();
         let pending_interjections = self.pending_interjections.clone();
         let session_id: Arc<str> = Arc::from(&*self.session_info.id.0);
+        preparation.finish("completed");
         let dispatch_futures: Vec<_> = approved
             .iter()
             .enumerate()
@@ -537,6 +545,13 @@ impl SessionActor {
                 let tools_execute_span = tracing::Span::current();
                 async move {
                     let exec_start = std::time::Instant::now();
+                    let observation = crate::observation::Phase::start("tool_dispatch", || {
+                        serde_json::json!({
+                            "session_id": session_id.as_ref(),
+                            "tool_call_id": prepared.call_id.as_str(),
+                            "includes_lock_wait_and_auth_retry": true,
+                        })
+                    });
                     let tool_span = tool_execution_span(
                         &tools_execute_span,
                         session_id.as_ref(),
@@ -593,6 +608,7 @@ impl SessionActor {
                     };
                     let duration_ms = exec_start.elapsed().as_millis() as u64;
                     let success = record_tool_span_outcome(tool_span_for_record, &result);
+                    observation.finish(if success { "completed" } else { "failed" });
                     xai_grok_telemetry::unified_log::info(
                         "shell.tool.exec_done",
                         Some(session_id.as_ref()),

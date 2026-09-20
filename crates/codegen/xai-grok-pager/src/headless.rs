@@ -67,6 +67,10 @@ pub struct HeadlessOptions {
     pub cli_tools: Option<String>,
     pub cli_disallowed_tools: Option<String>,
     pub disable_web_search: bool,
+    /// Disable memory even when enabled in the loaded configuration.
+    pub no_memory: bool,
+    /// Disable subagent spawning even when enabled in the loaded configuration.
+    pub no_subagents: bool,
     pub allow_rules: Vec<String>,
     pub deny_rules: Vec<String>,
     pub max_turns: Option<u32>,
@@ -751,6 +755,15 @@ pub async fn run_single_turn(
     options: HeadlessOptions,
 ) -> Result<()> {
     // Stamp proxy requests as headless before the agent issues its first request.
+    let observation = xai_grok_shell::observation::Phase::start("headless", || {
+        serde_json::json!({
+            "requested_model_present": options.model.is_some(),
+            "requested_reasoning_effort_present": options.reasoning_effort.is_some(),
+            "max_turns": options.max_turns,
+            "resume": options.resume.is_some() || options.continue_last_session,
+            "coverage": "embedded_headless; sampler attempts and selected shell phases; auxiliary and external-provider requests may be unobserved",
+        })
+    });
     xai_grok_shell::http::set_process_client_mode_headless();
 
     let cwd = match options.cwd {
@@ -789,11 +802,11 @@ pub async fn run_single_turn(
         raw_config: &raw_config,
         remote_settings: None,
         is_headless: true,
-        cli_subagents: None,
+        cli_subagents: options.no_subagents.then_some(false),
         cli_web_search_model: None,
         cli_session_summary_model: None,
         cli_experimental_memory: false,
-        cli_no_memory: false,
+        cli_no_memory: options.no_memory,
         disable_web_search: options.disable_web_search,
         todo_gate: false,
         laziness_debug_log: None,
@@ -1109,6 +1122,11 @@ pub async fn run_single_turn(
 
     let request = acp::PromptRequest::new(session_id.clone(), prompt_blocks).meta(prompt_meta);
     let t_prompt = Instant::now();
+    let prompt_observation = xai_grok_shell::observation::Phase::start("prompt", || {
+        serde_json::json!({
+            "session_id": session_id.0.as_ref(),
+        })
+    });
     emitter.mark_prompt_started();
     let mut ttf_logged = false;
     let mut prompt_fut = Box::pin(acp_send(request, &acp_tx));
@@ -1332,6 +1350,16 @@ pub async fn run_single_turn(
     if let Some(err) = emitter.take_output_error() {
         return Err(anyhow::Error::new(err).context("headless: stdout write failed"));
     }
+    prompt_observation.finish(if outcome.is_ok() {
+        "completed"
+    } else {
+        "failed"
+    });
+    observation.finish(if outcome.is_ok() {
+        "completed"
+    } else {
+        "failed"
+    });
     outcome
 }
 

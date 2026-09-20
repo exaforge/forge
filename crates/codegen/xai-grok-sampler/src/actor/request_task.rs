@@ -26,6 +26,7 @@ use crate::client::{ApiBackend, SamplingClient};
 use crate::config::{RetryPolicy, SamplerConfig};
 use crate::events::{SamplingErrorInfo, SamplingErrorKind, SamplingEvent};
 use crate::metrics::InferenceLatencyStats;
+use crate::request_observation::{self, AttemptHandle, RawObservation, RequestObservation};
 use crate::retry::{
     self as retry_mod, RetryDecision, classify_error, clone_error, resolve_max_retries,
 };
@@ -87,6 +88,8 @@ pub(crate) async fn run_request_task(
     cancel_token: CancellationToken,
     completion_tx: Option<oneshot::Sender<CompletionResult>>,
 ) -> RequestId {
+    // Start before client construction and before any HTTP initialization.
+    let mut observation = RequestObservation::start(&request_id, &request, &config);
     let mut completion_tx = completion_tx;
     let idle_timeout = Duration::from_secs(
         config
@@ -105,6 +108,9 @@ pub(crate) async fn run_request_task(
     let mut client = match SamplingClient::new(config.clone()) {
         Ok(c) => c,
         Err(err) => {
+            if let Some(observation) = &mut observation {
+                observation.finish("client_init_failed");
+            }
             emit_failed(&event_tx, &request_id, &err);
             send_completion(&mut completion_tx, Err(err));
             return request_id;
@@ -135,6 +141,9 @@ pub(crate) async fn run_request_task(
 
     loop {
         if cancel_token.is_cancelled() {
+            if let Some(observation) = &mut observation {
+                observation.finish("cancelled");
+            }
             handle_cancellation(&event_tx, &request_id, &mut completion_tx);
             return request_id;
         }
@@ -142,6 +151,10 @@ pub(crate) async fn run_request_task(
         // Once the resample budget is spent, the attempt runs with the abort
         // disarmed so it can complete and be accepted as-is.
         let doom_check = doom_policy.filter(|_| doom_retry_count < doom_max_retries);
+        let mut attempt_observation = observation
+            .as_mut()
+            .map(RequestObservation::attempt)
+            .unwrap_or_default();
         let outcome = run_one_attempt(
             &client,
             request.clone(),
@@ -151,9 +164,22 @@ pub(crate) async fn run_request_task(
             &cancel_token,
             doom_check,
             Arc::clone(&output_observed),
+            attempt_observation.handle(),
         )
         .instrument(sampling_span.clone())
         .await;
+
+        match &outcome {
+            AttemptOutcome::Completed { .. } => attempt_observation.finish("completed", None),
+            AttemptOutcome::Empty { .. } => attempt_observation.finish("empty_response", None),
+            AttemptOutcome::Failed { error } => {
+                attempt_observation.finish("stream_failed", Some(error))
+            }
+            AttemptOutcome::Cancelled => attempt_observation.finish("cancelled", None),
+            AttemptOutcome::InitFailed { error } => {
+                attempt_observation.finish("http_init_failed", Some(error))
+            }
+        }
 
         let effective_max_retries =
             if retry_policy.retry_only_before_output && output_observed.load(Ordering::Relaxed) {
@@ -167,6 +193,9 @@ pub(crate) async fn run_request_task(
                 response,
                 mut metrics,
             } => {
+                if let Some(observation) = &mut observation {
+                    observation.finish("completed");
+                }
                 metrics.attempts = retry_count + doom_retry_count + 1;
                 if let Some(policy) = doom_policy {
                     let confident = policy.confident_triggers(&response.doom_loop_signals);
@@ -228,6 +257,13 @@ pub(crate) async fn run_request_task(
                 )
                 .await
                 {
+                    if let Some(observation) = &mut observation {
+                        observation.finish(if cancel_token.is_cancelled() {
+                            "cancelled"
+                        } else {
+                            "failed"
+                        });
+                    }
                     return request_id;
                 }
             }
@@ -239,6 +275,9 @@ pub(crate) async fn run_request_task(
                     if retry_policy.retry_only_before_output
                         && output_observed.load(Ordering::Relaxed)
                     {
+                        if let Some(observation) = &mut observation {
+                            observation.finish("failed");
+                        }
                         emit_failed(&event_tx, &request_id, &error);
                         send_completion(&mut completion_tx, Err(clone_error(&error)));
                         return request_id;
@@ -264,6 +303,9 @@ pub(crate) async fn run_request_task(
                         continue;
                     }
                     handle_cancellation(&event_tx, &request_id, &mut completion_tx);
+                    if let Some(observation) = &mut observation {
+                        observation.finish("cancelled");
+                    }
                     return request_id;
                 }
                 if !apply_retry_decision(
@@ -281,10 +323,20 @@ pub(crate) async fn run_request_task(
                 )
                 .await
                 {
+                    if let Some(observation) = &mut observation {
+                        observation.finish(if cancel_token.is_cancelled() {
+                            "cancelled"
+                        } else {
+                            "failed"
+                        });
+                    }
                     return request_id;
                 }
             }
             AttemptOutcome::Cancelled => {
+                if let Some(observation) = &mut observation {
+                    observation.finish("cancelled");
+                }
                 handle_cancellation(&event_tx, &request_id, &mut completion_tx);
                 return request_id;
             }
@@ -304,6 +356,13 @@ pub(crate) async fn run_request_task(
                 )
                 .await
                 {
+                    if let Some(observation) = &mut observation {
+                        observation.finish(if cancel_token.is_cancelled() {
+                            "cancelled"
+                        } else {
+                            "failed"
+                        });
+                    }
                     return request_id;
                 }
             }
@@ -479,6 +538,7 @@ async fn run_one_attempt(
     cancel_token: &CancellationToken,
     doom_check: Option<xai_grok_sampling_types::DoomLoopRecoveryPolicy>,
     output_observed: Arc<AtomicBool>,
+    observation: AttemptHandle,
 ) -> AttemptOutcome {
     match client.api_backend() {
         ApiBackend::ChatCompletions => {
@@ -486,7 +546,7 @@ async fn run_one_attempt(
                 Ok(pair) => pair,
                 Err(e) => return AttemptOutcome::InitFailed { error: e },
             };
-            let (teed, captured) = tee_errors(raw);
+            let (teed, captured) = tee_errors(raw, observation.clone());
             let l2 = stream_chat_completions(teed, metadata, request_id.clone(), idle_timeout);
             drive_l2(
                 l2,
@@ -496,6 +556,7 @@ async fn run_one_attempt(
                 captured,
                 None,
                 output_observed,
+                observation,
             )
             .await
         }
@@ -510,7 +571,7 @@ async fn run_one_attempt(
             {
                 collector.disarm_abort();
             }
-            let (teed, captured) = tee_errors(raw);
+            let (teed, captured) = tee_errors(raw, observation.clone());
             let l2 = stream_responses_tracked(
                 teed,
                 metadata,
@@ -527,6 +588,7 @@ async fn run_one_attempt(
                 captured,
                 doom_check,
                 output_observed,
+                observation,
             )
             .await
         }
@@ -535,7 +597,7 @@ async fn run_one_attempt(
                 Ok(pair) => pair,
                 Err(e) => return AttemptOutcome::InitFailed { error: e },
             };
-            let (teed, captured) = tee_errors(raw);
+            let (teed, captured) = tee_errors(raw, observation.clone());
             let l2 = stream_messages(teed, metadata, request_id.clone(), idle_timeout);
             drive_l2(
                 l2,
@@ -545,6 +607,7 @@ async fn run_one_attempt(
                 captured,
                 None,
                 output_observed,
+                observation,
             )
             .await
         }
@@ -559,13 +622,15 @@ type ErrorCell = Arc<Mutex<Option<SamplingError>>>;
 /// shared cell. The wrapped stream still yields the original
 /// `Result<T, SamplingError>` items unchanged so the L2 transform sees
 /// them and converts them to `SamplingErrorInfo` for events.
-fn tee_errors<'a, T: Send + 'a>(
+fn tee_errors<'a, T: Send + RawObservation + 'a>(
     raw: BoxStream<'a, SamplingResult<T>>,
+    observation: AttemptHandle,
 ) -> (BoxStream<'a, SamplingResult<T>>, ErrorCell) {
     let cell: ErrorCell = Arc::new(Mutex::new(None));
     let cell_clone = Arc::clone(&cell);
     let teed = raw
         .map(move |item| {
+            request_observation::observe_raw(&observation, &item);
             if let Err(ref e) = item
                 && let Ok(mut guard) = cell_clone.lock()
                 && guard.is_none()
@@ -595,6 +660,7 @@ async fn drive_l2(
     captured: ErrorCell,
     doom_check: Option<xai_grok_sampling_types::DoomLoopRecoveryPolicy>,
     output_observed: Arc<AtomicBool>,
+    observation: AttemptHandle,
 ) -> AttemptOutcome {
     let mut l2 = pin!(l2);
     loop {
@@ -603,7 +669,9 @@ async fn drive_l2(
             _ = cancel_token.cancelled() => {
                 return AttemptOutcome::Cancelled;
             }
-            next = l2.next() => match next {
+            next = l2.next() => {
+                if let Some(event) = &next { request_observation::observe_event(&observation, event); }
+                match next {
                 Some(SamplingEvent::Completed { response, metrics, .. }) => {
                     output_observed.store(true, Ordering::Relaxed);
                     // Doom outranks the truncation/empty classes: a confident
@@ -667,6 +735,7 @@ async fn drive_l2(
                         ),
                     };
                 }
+            }
             }
         }
     }
@@ -799,6 +868,7 @@ fn emit_retrying(
     max_retries: u32,
     err: &SamplingError,
 ) {
+    request_observation::retry_scheduled(request_id, attempt, max_retries, err);
     let info = SamplingErrorInfo::from(err);
     let _ = event_tx.send(SamplingEvent::Retrying {
         request_id: request_id.clone(),
@@ -855,6 +925,270 @@ fn send_completion(
 mod tests {
     use super::*;
     use futures_util::stream;
+
+    fn observation_sse(delta: serde_json::Value, finish: Option<&str>, usage: bool) -> String {
+        let mut chunk = serde_json::json!({
+            "id":"private-response-id", "object":"chat.completion.chunk", "created":0,
+            "model":"test-model", "choices":[{"index":0,"delta":delta,"finish_reason":finish}]
+        });
+        if usage {
+            chunk["usage"] =
+                serde_json::json!({"prompt_tokens":12,"completion_tokens":8,"total_tokens":20});
+        }
+        format!("data: {chunk}\n\n")
+    }
+
+    async fn observation_server(
+        response: impl Fn() -> std::pin::Pin<
+            Box<dyn std::future::Future<Output = axum::response::Response> + Send>,
+        > + Send
+        + Sync
+        + 'static,
+    ) -> (String, tokio::task::JoinHandle<()>) {
+        let response = Arc::new(response);
+        let app = axum::Router::new().fallback(move || {
+            let response = Arc::clone(&response);
+            async move { response().await }
+        });
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}", listener.local_addr().unwrap());
+        let task = tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+        (url, task)
+    }
+
+    fn observation_config(url: String, retries: u32) -> SamplerConfig {
+        SamplerConfig {
+            base_url: url,
+            model: "test-model".into(),
+            api_key: Some("private-test-token".into()),
+            max_retries: Some(retries),
+            ..Default::default()
+        }
+    }
+
+    fn observation_request() -> ConversationRequest {
+        ConversationRequest {
+            items: vec![xai_grok_sampling_types::ConversationItem::user(
+                "private prompt text",
+            )],
+            x_grok_session_id: Some("session-1".into()),
+            x_grok_req_id: Some("prompt-1".into()),
+            ..Default::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn observation_includes_http_setup_and_reasoning_tool_only_channels() {
+        let capture = crate::observation::test_capture::Capture::start();
+        let body = observation_sse(
+            serde_json::json!({"reasoning_content":"private reasoning"}),
+            None,
+            false,
+        ) + &observation_sse(
+            serde_json::json!({"tool_calls":[{"index":0,"id":"private-tool-id","type":"function","function":{"name":"private-tool-name","arguments":"{}"}}]}),
+            Some("tool_calls"),
+            true,
+        ) + "data: [DONE]\n\n";
+        let (url, server) = observation_server(move || {
+            let body = body.clone();
+            Box::pin(async move {
+                tokio::time::sleep(Duration::from_millis(60)).await;
+                axum::response::Response::builder()
+                    .header("content-type", "text/event-stream")
+                    .body(axum::body::Body::from(body))
+                    .unwrap()
+            })
+        })
+        .await;
+        let (tx, _rx) = mpsc::unbounded_channel();
+        run_request_task(
+            "observed".into(),
+            observation_request(),
+            observation_config(url, 0),
+            RetryPolicy::default(),
+            tx,
+            CancellationToken::new(),
+            None,
+        )
+        .await;
+        server.abort();
+        let rows = capture.take();
+        let attempt = rows
+            .iter()
+            .find(|v| v["event"] == "sampler_attempt_finished")
+            .unwrap();
+        assert_eq!(attempt["outcome"], "completed");
+        assert!(attempt["first_response_event_ms"].as_f64().unwrap() >= 50.0);
+        assert!(attempt["first_reasoning_ms"].as_f64().is_some());
+        assert!(attempt["first_tool_delta_ms"].as_f64().is_some());
+        assert!(attempt["first_text_ms"].is_null());
+        assert_eq!(attempt["visible_text_chunk_count"], 0);
+        assert_eq!(attempt["provider_usage"]["input_tokens"], 12);
+        assert_eq!(attempt["provider_usage"]["output_tokens"], 8);
+        assert_eq!(attempt["usage_is_final"], true);
+        assert_eq!(attempt["session_id"], "session-1");
+        assert_eq!(attempt["prompt_id"], "prompt-1");
+        assert!(!serde_json::to_string(&rows).unwrap().contains("private"));
+    }
+
+    #[tokio::test]
+    async fn observation_retains_http_failure_and_retry_attempt() {
+        use std::sync::atomic::AtomicU32;
+        let capture = crate::observation::test_capture::Capture::start();
+        let calls = Arc::new(AtomicU32::new(0));
+        let (url, server) = observation_server(move || {
+            let first = calls.fetch_add(1, Ordering::Relaxed) == 0;
+            Box::pin(async move {
+                if first {
+                    axum::response::Response::builder()
+                        .status(503)
+                        .body(axum::body::Body::from(
+                            r#"{"error":{"message":"private upstream error"}}"#,
+                        ))
+                        .unwrap()
+                } else {
+                    let body = observation_sse(
+                        serde_json::json!({"content":"private output"}),
+                        Some("stop"),
+                        true,
+                    ) + "data: [DONE]\n\n";
+                    axum::response::Response::builder()
+                        .header("content-type", "text/event-stream")
+                        .body(axum::body::Body::from(body))
+                        .unwrap()
+                }
+            })
+        })
+        .await;
+        let (tx, _rx) = mpsc::unbounded_channel();
+        run_request_task(
+            "retry-request".into(),
+            observation_request(),
+            observation_config(url, 3),
+            RetryPolicy::default(),
+            tx,
+            CancellationToken::new(),
+            None,
+        )
+        .await;
+        server.abort();
+        let rows = capture.take();
+        let attempts: Vec<_> = rows
+            .iter()
+            .filter(|v| v["event"] == "sampler_attempt_finished")
+            .collect();
+        assert_eq!(attempts.len(), 2);
+        assert_eq!(attempts[0]["attempt"], 1);
+        assert_eq!(attempts[0]["status_code"], 503);
+        assert_eq!(attempts[0]["outcome"], "http_init_failed");
+        assert!(attempts[0]["first_response_event_ms"].is_null());
+        assert!(attempts[0]["provider_usage"].is_null());
+        assert_eq!(attempts[1]["attempt"], 2);
+        assert_eq!(attempts[1]["outcome"], "completed");
+        assert_eq!(
+            rows.iter()
+                .filter(|v| v["event"] == "sampler_retry_scheduled")
+                .count(),
+            1
+        );
+        let finished = rows
+            .iter()
+            .find(|v| v["event"] == "sampler_request_finished")
+            .unwrap();
+        assert_eq!(finished["attempts_started"], 2);
+        assert_eq!(finished["retries_started"], 1);
+        assert!(!serde_json::to_string(&rows).unwrap().contains("private"));
+    }
+
+    #[tokio::test]
+    async fn observation_records_cancelled_attempt_without_inventing_usage() {
+        let capture = crate::observation::test_capture::Capture::start();
+        let (url, server) = observation_server(|| Box::pin(async {
+            let stream = async_stream::stream! {
+                yield Ok::<_,std::io::Error>(observation_sse(serde_json::json!({"reasoning_content":"private reasoning"}),None,false));
+                std::future::pending::<()>().await;
+            };
+            axum::response::Response::builder().header("content-type","text/event-stream")
+                .body(axum::body::Body::from_stream(stream)).unwrap()
+        })).await;
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        let cancel = CancellationToken::new();
+        let cancellation = async {
+            while let Some(event) = rx.recv().await {
+                if matches!(event, SamplingEvent::ChannelToken { .. }) {
+                    cancel.cancel();
+                    break;
+                }
+            }
+        };
+        tokio::join!(
+            run_request_task(
+                "cancel-request".into(),
+                observation_request(),
+                observation_config(url, 0),
+                RetryPolicy::default(),
+                tx,
+                cancel.clone(),
+                None
+            ),
+            cancellation
+        );
+        server.abort();
+        let rows = capture.take();
+        let attempt = rows
+            .iter()
+            .find(|v| v["event"] == "sampler_attempt_finished")
+            .unwrap();
+        assert_eq!(attempt["outcome"], "cancelled");
+        assert!(attempt["first_response_event_ms"].as_f64().is_some());
+        assert!(attempt["first_reasoning_ms"].as_f64().is_some());
+        assert!(attempt["first_text_ms"].is_null());
+        assert!(attempt["provider_usage"].is_null());
+        assert!(attempt["observed_output_tokens_per_second"].is_null());
+        assert_eq!(
+            rows.iter()
+                .find(|v| v["event"] == "sampler_request_finished")
+                .unwrap()["outcome"],
+            "cancelled"
+        );
+    }
+
+    #[tokio::test]
+    async fn observation_records_stream_parse_failure_without_payload() {
+        let capture = crate::observation::test_capture::Capture::start();
+        let (url, server) = observation_server(|| {
+            Box::pin(async {
+                axum::response::Response::builder()
+                    .header("content-type", "text/event-stream")
+                    .body(axum::body::Body::from("data: {private malformed JSON}\n\n"))
+                    .unwrap()
+            })
+        })
+        .await;
+        let (tx, _rx) = mpsc::unbounded_channel();
+        run_request_task(
+            "bad-stream".into(),
+            observation_request(),
+            observation_config(url, 0),
+            RetryPolicy::default(),
+            tx,
+            CancellationToken::new(),
+            None,
+        )
+        .await;
+        server.abort();
+        let rows = capture.take();
+        let attempt = rows
+            .iter()
+            .find(|v| v["event"] == "sampler_attempt_finished")
+            .unwrap();
+        assert_eq!(attempt["outcome"], "stream_failed");
+        assert_eq!(attempt["raw_stream_error_count"], 1);
+        assert!(attempt["first_response_event_ms"].is_null());
+        assert!(!serde_json::to_string(&rows).unwrap().contains("private"));
+    }
 
     #[test]
     fn synthesize_idle_timeout_extracts_elapsed_secs() {
@@ -1021,7 +1355,7 @@ mod tests {
             Err(SamplingError::EventStreamError("second".into())),
         ];
         let raw = stream::iter(items).boxed();
-        let (mut teed, cell) = tee_errors(raw);
+        let (mut teed, cell) = tee_errors(raw, None);
         while teed.next().await.is_some() {}
         let captured = cell.lock().unwrap().take().expect("error captured");
         match captured {

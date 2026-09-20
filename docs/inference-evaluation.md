@@ -103,6 +103,12 @@ evaluation before becoming defaults.
 
 ## Evidence policy
 
+`FORGE_BATCH_READS=1` adds a short instruction to the default native file-reader
+description to group independent reads/searches in one model response. Existing
+concurrent dispatch executes those calls; no new scheduler or speculative writes
+are introduced. Custom tool descriptions are preserved. This is an opt-in prompt
+experiment: it can add input tokens and does not guarantee fewer model rounds.
+
 Use fresh sessions/workspaces, fixed fixture and verifier identities, explicit
 limits, and counterbalanced order. Retain run manifests, metadata events,
 summaries, and failures. Small samples support exploratory observations, not a

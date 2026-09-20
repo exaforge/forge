@@ -230,6 +230,45 @@
         "--",
         "{prompt}"
       ]
+    },
+    {
+      "id": "forge-batch-reads-only",
+      "kind": "forge",
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "argv": [
+        "forge",
+        "-p",
+        "{prompt}",
+        "--cwd",
+        "{workspace}",
+        "--output-format",
+        "json",
+        "--no-auto-update",
+        "--no-memory",
+        "--no-subagents",
+        "--max-turns",
+        "{max_turns}",
+        "--model",
+        "{model}",
+        "--effort",
+        "{effort}",
+        "--always-approve",
+        "--trust",
+        "--sandbox",
+        "workspace",
+        "--disable-web-search",
+        "--tools",
+        "read_file,search_replace,write,apply_patch,grep,grep_files,list_dir,run_terminal_cmd,get_task_output,wait_tasks,kill_task,get_terminal_command_output,kill_terminal_command,hashline_read,hashline_edit,hashline_grep",
+        "--disallowed-tools",
+        "search_tool,use_tool"
+      ],
+      "env": {
+        "FORGE_PROMPT_CACHE": "0",
+        "FORGE_CONTEXT_FAST_PATH": "1",
+        "GROK_SAMPLER_SHARED_CLIENT": "1",
+        "FORGE_BATCH_READS": "1"
+      }
     }
   ]
 }

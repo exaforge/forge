@@ -1157,6 +1157,13 @@ impl ToolRegistryBuilder {
                 &entry.input_schema,
                 &effective_params,
             );
+            super::inference_efficiency::append_batch_read_guidance(
+                &mut definition,
+                entry.metadata.tool_namespace(),
+                &entry.id,
+                tool_config.description_override.is_some(),
+                std::env::var("FORGE_BATCH_READS").as_deref() == Ok("1"),
+            );
             if let Some(desc) = &definition.function.description {
                 definition.function.description = Some(truncation_config.interpolate_description(
                     desc,

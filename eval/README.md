@@ -58,6 +58,11 @@ experiment: setting a key does not establish a cache hit or a speed gain. These
 comparisons do not automatically represent a historical released binary.
 Separate binary paths can be used when needed.
 
+`forge-batch-reads-only` starts from `forge-optimized` and enables
+`FORGE_BATCH_READS=1`: guidance to request independent file reads/searches in
+one response. It preserves the same tools, execution policy and reasoning effort.
+Compare it against `forge-optimized` to isolate this prompt experiment.
+
 ```sh
 python3 eval/run.py run --profiles /absolute/path/profiles.json \
   --profile forge-baseline --profile forge-optimized \

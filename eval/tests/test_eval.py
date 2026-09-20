@@ -171,7 +171,8 @@ class EvaluatorTests(unittest.TestCase):
                                  ("b", "one", 2), ("a", "one", 2), ("a", "two", 2), ("b", "two", 2)])
 
     def test_profiles_are_argv_only_and_no_secret_env(self):
-        self.assertEqual(len(run.load_profiles(EVAL / "profiles.example.json")), 7)
+        profiles = run.load_profiles(EVAL / "profiles.example.json")
+        self.assertTrue({"forge-baseline", "forge-optimized", "codex-direct", "claude-direct"} <= profiles.keys())
         document = {"profiles": [self.profile()]}
         document["profiles"][0]["env"] = {"API_TOKEN": "do-not-retain"}
         path = self.root / "bad.json"

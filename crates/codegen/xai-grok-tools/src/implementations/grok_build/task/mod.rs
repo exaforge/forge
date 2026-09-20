@@ -767,6 +767,7 @@ mod tests {
                 resume_from: None,
                 cwd: None,
                 model: None,
+                reasoning_effort: None,
                 task_id: None,
             },
         )
@@ -2727,13 +2728,14 @@ mod tests {
                 request.runtime_overrides.reasoning_effort.as_deref(),
                 Some("high")
             );
+            let subagent_id = request.id.clone();
             request
                 .result_tx
                 .send(SubagentResult {
                     success: true,
                     output: "ok".into(),
-                    subagent_id: request.id.clone(),
-                    child_session_id: request.id.clone(),
+                    subagent_id: subagent_id.clone(),
+                    child_session_id: subagent_id,
                     ..Default::default()
                 })
                 .unwrap();

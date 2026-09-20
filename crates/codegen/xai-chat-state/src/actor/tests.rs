@@ -1689,6 +1689,56 @@ async fn build_request_with_multiple_tool_calls_and_results() {
     assert_eq!(request.items.len(), 6);
 }
 
+/// Run once with the environment unset and once with FORGE_ROUND_CONTEXT=1.
+/// The helper unit tests exercise all flag values without mutating process
+/// environment, while this checks the real actor/request/persistence boundary.
+#[tokio::test]
+async fn round_context_request_builder_preserves_history_and_reasoning() {
+    use xai_grok_sampling_types::{ReasoningEffort, ToolCall};
+
+    let output = format!("1→{}", "日本語 source text 🦀 ".repeat(100));
+    let mut items = vec![
+        ConversationItem::system("Keep these project instructions."),
+        ConversationItem::user("Inspect the file."),
+    ];
+    for id in ["read-1", "read-2", "read-3"] {
+        items.push(ConversationItem::assistant_tool_calls(vec![ToolCall {
+            id: id.into(),
+            name: "read_file".into(),
+            arguments: r#"{"target_file":"/repo/source.rs"}"#.into(),
+        }]));
+        items.push(ConversationItem::tool_result(id, output.clone()));
+    }
+    let mut config = test_config();
+    config.reasoning_effort = Some(ReasoningEffort::Medium);
+    let mut h = TestHarness::with_config(items, config);
+    let history_before = serde_json::to_value(h.handle.get_conversation().await).unwrap();
+    h.drain_persistence();
+
+    let request = h
+        .handle
+        .build_request(vec![], None, false, None, "c".into(), "r".into())
+        .await
+        .unwrap();
+
+    assert_eq!(request.reasoning_effort, Some(ReasoningEffort::Medium));
+    assert_eq!(
+        serde_json::to_value(h.handle.get_conversation().await).unwrap(),
+        history_before
+    );
+    assert!(
+        h.drain_persistence().is_empty(),
+        "request reduction must not rewrite persisted history"
+    );
+    let mut expected = history_before;
+    if std::env::var("FORGE_ROUND_CONTEXT").ok().as_deref() == Some("1") {
+        expected[5]["content"] = serde_json::json!(
+            "[Repeated file read omitted: the exact same arguments and contents are retained in the earlier full read and the latest matching read.]"
+        );
+    }
+    assert_eq!(serde_json::to_value(request.items).unwrap(), expected);
+}
+
 // ============================================================================
 // Parallel tool calls with mixed accept/reject
 // ============================================================================

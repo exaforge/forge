@@ -52,7 +52,8 @@ impl ChatStateActor {
     /// 2. Prune old tool results if over 50% context utilization
     /// 3. Optionally persist the memory reminder into actor state
     /// 4. Inject memory reminder into the request clone (if needed)
-    /// 5. Assemble and return the `ConversationRequest`
+    /// 5. Optionally reduce exact repeated file reads in the request copy
+    /// 6. Assemble and return the `ConversationRequest`
     ///
     /// # Repair invariant
     ///
@@ -107,7 +108,7 @@ impl ChatStateActor {
 
         // Only allocate the mutable working copy when a mutation path is taken.
         let mut eviction: Option<ImageEvictionOutcome> = None;
-        let items = if needs_mutation {
+        let mut items = if needs_mutation {
             let mut items = self.state.conversation.clone();
 
             // Step 1: When the body nears the 50 MB ceiling, evict oldest
@@ -139,6 +140,11 @@ impl ChatStateActor {
             // clone directly into the request without any intermediate mutation passes.
             self.state.conversation.clone()
         };
+
+        reduce_round_context(
+            &mut items,
+            std::env::var("FORGE_ROUND_CONTEXT").ok().as_deref(),
+        );
 
         // Per-turn image-budget record for local verification. Emitted on the
         // ChatState event channel (chat-state can't reach the shell's unified
@@ -186,6 +192,184 @@ impl ChatStateActor {
             json_schema: None,
         }
     }
+}
+
+/// A deliberately conservative request-copy optimization. Retain both the
+/// first and latest full result in a run of identical reads; replace only
+/// interior copies from distinct assistant rounds. The first full result and
+/// existing placeholders remain stable as further copies arrive, avoiding a
+/// rewrite of the earliest cached prefix. Replacing a former latest result can
+/// still invalidate the more recent cache suffix; token savings are not a
+/// guarantee of lower latency.
+///
+/// Conversation tool results do not retain typed success/path metadata. Only
+/// known, numbered `read_file` text with the exact same absolute-path arguments
+/// qualifies. Errors, changed content, images, instructions, unknown tools and
+/// new user messages are barriers. Nothing is removed or persisted, so tool
+/// call/result pairing and the actor's raw history remain intact.
+fn reduce_round_context(items: &mut [ConversationItem], flag: Option<&str>) -> usize {
+    use std::collections::HashMap;
+
+    if flag != Some("1") {
+        return 0;
+    }
+    let Some(start) = items
+        .iter()
+        .position(|item| matches!(item, ConversationItem::User(_)))
+    else {
+        return 0;
+    };
+    // Key -> (first full result, latest full result, latest assistant round).
+    let mut reads: HashMap<String, (usize, usize, usize)> = HashMap::new();
+    let mut pending = HashMap::new();
+    let mut replacements = Vec::new();
+    for (index, item) in items.iter().enumerate().skip(start + 1) {
+        match item {
+            ConversationItem::Assistant(assistant) if !assistant.tool_calls.is_empty() => {
+                let keys = assistant
+                    .tool_calls
+                    .iter()
+                    .map(round_read_key)
+                    .collect::<Option<Vec<_>>>();
+                if !pending.is_empty() || keys.is_none() {
+                    reads.clear();
+                    pending.clear();
+                }
+                if let Some(keys) = keys {
+                    for (call, key) in assistant.tool_calls.iter().zip(keys) {
+                        pending.insert(call.id.as_ref(), (key, index));
+                    }
+                }
+            }
+            ConversationItem::ToolResult(result) => {
+                let Some((key, round)) = pending.remove(result.tool_call_id.as_str()) else {
+                    reads.clear();
+                    continue;
+                };
+                if !result.images.is_empty()
+                    || result.content.len() < 1024
+                    || !is_numbered_file_text(&result.content)
+                {
+                    // A failed or unrecognized read must not bridge two
+                    // successful snapshots, even if their text later matches.
+                    reads.clear();
+                    continue;
+                }
+                if let Some(&(first, latest, latest_round)) = reads.get(&key)
+                    && let ConversationItem::ToolResult(previous) = &items[first]
+                    && previous.content == result.content
+                {
+                    if round != latest_round {
+                        if latest != first {
+                            replacements.push(latest);
+                        }
+                        reads.insert(key, (first, index, round));
+                    }
+                } else {
+                    // Changed reads start a new chain; their previous evidence
+                    // is never inferred obsolete or replaced.
+                    reads.insert(key, (index, index, round));
+                }
+            }
+            ConversationItem::System(_)
+            | ConversationItem::User(_)
+            | ConversationItem::BackendToolCall(_) => {
+                reads.clear();
+                pending.clear();
+            }
+            _ => {}
+        }
+    }
+    for &index in &replacements {
+        if let ConversationItem::ToolResult(result) = &mut items[index] {
+            result.content = std::sync::Arc::from(
+                "[Repeated file read omitted: the exact same arguments and contents \
+                 are retained in the earlier full read and the latest matching read.]",
+            );
+        }
+    }
+    replacements.len()
+}
+
+fn round_read_key(call: &xai_grok_sampling_types::ToolCall) -> Option<String> {
+    if call.name != "read_file" {
+        return None;
+    }
+    let args: serde_json::Value = serde_json::from_str(&call.arguments).ok()?;
+    let object = args.as_object()?;
+    // Native Grok and Codex read_file names/arguments only. Unknown schemas,
+    // PDF/notebook options and indentation reads deliberately fail closed.
+    if object.keys().any(|key| {
+        !matches!(
+            key.as_str(),
+            "target_file" | "file_path" | "path" | "offset" | "limit" | "mode"
+        )
+    }) {
+        return None;
+    }
+    let mut paths = ["target_file", "file_path", "path"]
+        .into_iter()
+        .filter_map(|key| object.get(key));
+    let path = std::path::Path::new(paths.next()?.as_str()?);
+    if paths.next().is_some() || !path.is_absolute() {
+        return None;
+    }
+    let name = path.file_name()?.to_str()?.to_ascii_lowercase();
+    if matches!(
+        name.as_str(),
+        "agents.md" | "claude.md" | "gemini.md" | "skill.md"
+    ) {
+        return None;
+    }
+    for key in ["offset", "limit"] {
+        if let Some(value) = object.get(key)
+            && value.as_u64().is_none_or(|value| value == 0)
+        {
+            return None;
+        }
+    }
+    if object.get("mode").is_some_and(|value| value != "slice") {
+        return None;
+    }
+    Some(args.to_string())
+}
+
+/// Recognize the native text-reader layouts, not arbitrary tool/error text.
+/// Grok labels the first line and each tenth line; Codex slice labels every
+/// line. Check the complete layout and reject attached instruction reminders.
+fn is_numbered_file_text(content: &str) -> bool {
+    if content.contains("<system-reminder") || content.contains("</system-reminder") {
+        return false;
+    }
+    let first = content.split('\n').next().unwrap_or_default();
+    let (codex, first_number) = if let Some(line) = first.strip_prefix('L') {
+        (true, line.split_once(": ").map(|(number, _)| number))
+    } else {
+        (false, first.split_once('→').map(|(number, _)| number))
+    };
+    let Some(first_number) = first_number.and_then(|number| number.parse::<usize>().ok()) else {
+        return false;
+    };
+    if first_number == 0 {
+        return false;
+    }
+    content.split('\n').enumerate().all(|(offset, line)| {
+        let Some(number) = first_number.checked_add(offset) else {
+            return false;
+        };
+        if codex {
+            line.strip_prefix('L')
+                .and_then(|line| line.split_once(": "))
+                .and_then(|(number, _)| number.parse::<usize>().ok())
+                == Some(number)
+        } else if offset == 0 || number.is_multiple_of(10) {
+            line.split_once('→')
+                .and_then(|(number, _)| number.parse::<usize>().ok())
+                == Some(number)
+        } else {
+            true
+        }
+    })
 }
 
 // ============================================================================
@@ -582,6 +766,229 @@ mod tests {
     use super::*;
 
     const CACHE_SESSION_ID: &str = "9e984794-a340-4125-85df-778d81ff5249";
+
+    fn numbered_read(codex: bool, label: &str) -> String {
+        (1..=40)
+            .map(|line| {
+                let content = format!("{label}: 日本語 café 🦀 with enough repeated source text");
+                if codex {
+                    format!("L{line}: {content}")
+                } else if line == 1 || line % 10 == 0 {
+                    format!("{line}→{content}")
+                } else {
+                    content
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn append_read(items: &mut Vec<ConversationItem>, id: &str, path: &str, output: &str) {
+        items.push(ConversationItem::assistant_tool_calls(vec![
+            xai_grok_sampling_types::ToolCall {
+                id: id.into(),
+                name: "read_file".into(),
+                arguments: serde_json::json!({"target_file": path}).to_string().into(),
+            },
+        ]));
+        items.push(ConversationItem::tool_result(id, output));
+    }
+
+    fn repeated_reads(output: &str) -> Vec<ConversationItem> {
+        let mut items = vec![
+            ConversationItem::system("Keep project instructions unchanged."),
+            ConversationItem::user("Inspect this file across several model rounds."),
+        ];
+        for id in ["read-1", "read-2", "read-3"] {
+            append_read(&mut items, id, "/repo/日本語.rs", output);
+        }
+        items
+    }
+
+    #[test]
+    fn round_context_one_user_turn_preserves_first_latest_and_raw_history() {
+        for codex in [false, true] {
+            let raw = repeated_reads(&numbered_read(codex, "source"));
+            let before = serde_json::to_value(&raw).unwrap();
+            let mut request = raw.clone();
+            assert_eq!(reduce_round_context(&mut request, Some("1")), 1);
+            assert_eq!(serde_json::to_value(&raw).unwrap(), before);
+            assert_eq!(request.len(), raw.len());
+            for index in [0, 1, 2, 3, 4, 6, 7] {
+                assert_eq!(
+                    serde_json::to_value(&request[index]).unwrap(),
+                    before[index],
+                    "only the interior result can change",
+                );
+            }
+            let ConversationItem::ToolResult(reduced) = &request[5] else {
+                panic!("tool result must remain paired")
+            };
+            assert_eq!(reduced.tool_call_id, "read-2");
+            assert!(reduced.content.starts_with("[Repeated file read omitted:"));
+            assert!(
+                serde_json::to_vec(&request).unwrap().len()
+                    < serde_json::to_vec(&raw).unwrap().len()
+            );
+        }
+    }
+
+    #[test]
+    fn round_context_disabled_is_byte_equivalent_and_two_reads_stay_full() {
+        let raw = repeated_reads(&numbered_read(false, "source"));
+        for flag in [
+            None,
+            Some("0"),
+            Some("true"),
+            Some(" 1"),
+            Some("1 "),
+            Some(""),
+        ] {
+            let mut request = raw.clone();
+            assert_eq!(reduce_round_context(&mut request, flag), 0);
+            assert_eq!(
+                serde_json::to_vec(&request).unwrap(),
+                serde_json::to_vec(&raw).unwrap()
+            );
+        }
+        let mut two = raw[..6].to_vec();
+        assert_eq!(reduce_round_context(&mut two, Some("1")), 0);
+        assert_eq!(
+            serde_json::to_vec(&two).unwrap(),
+            serde_json::to_vec(&raw[..6]).unwrap()
+        );
+    }
+
+    #[test]
+    fn round_context_changed_reads_and_errors_break_duplicate_chains() {
+        let original = numbered_read(false, "original");
+        for barrier in [
+            numbered_read(false, "changed"),
+            "Error: permission denied".repeat(100),
+            format!("{original}\n<system-reminder>Keep this instruction.</system-reminder>"),
+        ] {
+            let mut items = vec![ConversationItem::user("Inspect")];
+            for (id, output) in [
+                ("a", &original),
+                ("b", &barrier),
+                ("c", &original),
+                ("d", &original),
+            ] {
+                append_read(&mut items, id, "/repo/file.rs", output);
+            }
+            let before = serde_json::to_vec(&items).unwrap();
+            assert_eq!(reduce_round_context(&mut items, Some("1")), 0);
+            assert_eq!(serde_json::to_vec(&items).unwrap(), before);
+        }
+    }
+
+    #[test]
+    fn round_context_known_formats_only_and_instruction_reads_stay_full() {
+        let output = numbered_read(false, "source");
+        for path in [
+            "relative.rs",
+            "/repo/AGENTS.md",
+            "/repo/SKILL.md",
+            "/repo/CLAUDE.md",
+        ] {
+            let mut items = vec![ConversationItem::user("Inspect")];
+            for id in ["a", "b", "c"] {
+                append_read(&mut items, id, path, &output);
+            }
+            assert_eq!(reduce_round_context(&mut items, Some("1")), 0);
+        }
+        for output in [
+            "unnumbered contents".repeat(100),
+            "1→small".into(),
+            "L1: source\nL9: invalid slice".repeat(100),
+        ] {
+            assert_eq!(
+                reduce_round_context(&mut repeated_reads(&output), Some("1")),
+                0
+            );
+        }
+        let mut image_read = repeated_reads(&output);
+        if let ConversationItem::ToolResult(result) = &mut image_read[5] {
+            result.images.push(ContentPart::Image {
+                url: "data:image/png;base64,AAAA".into(),
+            });
+        }
+        assert_eq!(reduce_round_context(&mut image_read, Some("1")), 0);
+    }
+
+    #[test]
+    fn round_context_distinct_windows_and_mutating_tools_stay_full() {
+        let output = numbered_read(false, "source");
+        for mutation in [false, true] {
+            let mut items = repeated_reads(&output);
+            if let ConversationItem::Assistant(assistant) = &mut items[4] {
+                if mutation {
+                    assistant.tool_calls[0].name = "run_terminal_cmd".into();
+                } else {
+                    assistant.tool_calls[0].arguments =
+                        serde_json::json!({"target_file": "/repo/日本語.rs", "offset": 2})
+                            .to_string()
+                            .into();
+                }
+            }
+            assert_eq!(reduce_round_context(&mut items, Some("1")), 0);
+        }
+        let mut items = repeated_reads(&output);
+        if let ConversationItem::Assistant(assistant) = &mut items[4] {
+            assistant.tool_calls[0].name = "mcp_read_file".into();
+        }
+        assert_eq!(reduce_round_context(&mut items, Some("1")), 0);
+    }
+
+    #[test]
+    fn round_context_prior_prefix_stays_stable_as_rounds_and_users_append() {
+        let output = numbered_read(false, "source");
+        let mut raw = repeated_reads(&output);
+        let mut first_request = raw.clone();
+        assert_eq!(reduce_round_context(&mut first_request, Some("1")), 1);
+        append_read(&mut raw, "read-4", "/repo/日本語.rs", &output);
+        let mut second_request = raw.clone();
+        assert_eq!(reduce_round_context(&mut second_request, Some("1")), 2);
+        assert_eq!(
+            serde_json::to_value(&first_request[..7]).unwrap(),
+            serde_json::to_value(&second_request[..7]).unwrap()
+        );
+        raw.push(ConversationItem::user(
+            "New task; do not match reads across this boundary.",
+        ));
+        append_read(&mut raw, "new-read", "/repo/日本語.rs", &output);
+        let mut third_request = raw.clone();
+        assert_eq!(reduce_round_context(&mut third_request, Some("1")), 2);
+        assert_eq!(
+            serde_json::to_value(&second_request).unwrap(),
+            serde_json::to_value(&third_request[..second_request.len()]).unwrap()
+        );
+        assert_eq!(
+            serde_json::to_value(third_request.last()).unwrap(),
+            serde_json::to_value(raw.last()).unwrap()
+        );
+    }
+
+    #[test]
+    fn round_context_parallel_copies_do_not_count_as_separate_rounds() {
+        let output = numbered_read(true, "source");
+        let raw = repeated_reads(&output);
+        let mut calls = Vec::new();
+        let mut results = Vec::new();
+        for item in raw.into_iter().skip(2) {
+            match item {
+                ConversationItem::Assistant(assistant) => calls.extend(assistant.tool_calls),
+                ConversationItem::ToolResult(_) => results.push(item),
+                _ => unreachable!(),
+            }
+        }
+        let mut items = vec![
+            ConversationItem::user("Inspect"),
+            ConversationItem::assistant_tool_calls(calls),
+        ];
+        items.extend(results.into_iter().rev());
+        assert_eq!(reduce_round_context(&mut items, Some("1")), 0);
+    }
 
     #[test]
     fn context_fast_path_preserves_exact_image_free_body_size() {

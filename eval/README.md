@@ -71,6 +71,16 @@ results retain head/tail context and a full-log reference. Instruction/skill fil
 and document/image reads retain their existing behavior. Smaller previews can
 cause extra follow-up reads, so token savings do not establish a speed gain.
 
+`forge-round-context-only` enables `FORGE_ROUND_CONTEXT=1` on the same
+local-coding baseline. Three or more identical large file reads across model
+rounds can share the first/latest full copies; only interior duplicate results
+are replaced in the outbound request. Raw history remains intact. Changed reads,
+errors, instructions, images and unknown tool formats are preserved. This does
+not guess that different snapshots are obsolete. Activation may be zero on small
+tasks; rewriting a later request suffix can also reduce cache reuse. Native
+`request_context` records count omitted copies currently present in each request
+and tool-description bytes, without retaining source or descriptions themselves.
+
 ```sh
 python3 eval/run.py run --profiles /absolute/path/profiles.json \
   --profile forge-baseline --profile forge-optimized \

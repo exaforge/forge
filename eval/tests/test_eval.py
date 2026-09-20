@@ -98,6 +98,17 @@ class EvaluatorTests(unittest.TestCase):
         self.assertNotIn("DO_NOT_PERSIST", json.dumps(events))
         self.assertNotIn("unknown_boolean", events[0])
 
+    def test_context_observations_retain_counts_without_read_payloads(self):
+        path = self.root / "context.jsonl"
+        path.write_text(json.dumps({"schema_version": 1, "run_id": "context-run",
+            "event": "request_context", "loop_index": 3, "reduced_read_results": 2,
+            "tool_description_bytes": 100, "source": "DO_NOT_PERSIST"}) + "\n")
+        events, collection = run.read_observations(path, "context-run")
+        self.assertEqual(collection["discarded_records"], 0)
+        self.assertEqual(events[0]["reduced_read_results"], 2)
+        self.assertEqual(events[0]["tool_description_bytes"], 100)
+        self.assertNotIn("DO_NOT_PERSIST", json.dumps(events))
+
     def test_verifier_tampering_is_detected(self):
         result, _ = self.attempt("tamper")
         self.assertEqual(result["verification"]["status"], "integrity_error")

@@ -31,6 +31,7 @@ PLACEHOLDERS = {"prompt", "workspace", "model", "effort", "max_turns", "run_id",
 ALLOWED_ENV = {"FORGE_PROMPT_CACHE", "FORGE_CONTEXT_FAST_PATH", "GROK_SAMPLER_SHARED_CLIENT",
                "FORGE_BATCH_READS",
                "FORGE_TOOL_OUTPUT_BUDGET",
+               "FORGE_ROUND_CONTEXT",
                "GROK_POOL_MAX_IDLE", "GROK_POOL_IDLE_TIMEOUT_SECS", "GROK_CONNECT_TIMEOUT_SECS"}
 USAGE_FIELDS = ("input_tokens", "output_tokens", "cached_input_tokens",
                 "cache_creation_input_tokens", "reasoning_tokens", "total_tokens")
@@ -43,6 +44,7 @@ OBS_NUMBER_KEYS = {"schema_version", "timestamp_unix_ms", "elapsed_ms", "attempt
                    "dropped_records", "flush_failures", "records_written", "raw_response_event_count",
                    "raw_stream_error_count", "status_code", "loop_index", "turn_number", "tool_count"}
 OBS_NUMBER_KEYS.add("generated_content_event_count")
+OBS_NUMBER_KEYS.update({"reduced_read_results", "tool_description_bytes"})
 OBS_STRING_KEYS = {"run_id", "request_id", "session_id", "prompt_id", "phase_id", "phase", "model", "outcome",
                    "usage_scope", "scope", "throughput_scope", "provider", "api_backend", "backend",
                    "timing_scope", "usage_semantics", "error_kind", "counter_scope", "throughput_unavailable_reason",
@@ -348,7 +350,7 @@ def read_observations(path, run_id):
                 continue
             name = raw.get("event", raw.get("type"))
             if name not in {"sampler_request_started", "sampler_attempt_started", "sampler_attempt_finished",
-                            "sampler_request_finished", "sampler_retry_scheduled", "phase_start", "phase_end", "observation_health"}:
+                            "sampler_request_finished", "sampler_retry_scheduled", "phase_start", "phase_end", "observation_health", "request_context"}:
                 discarded += 1
                 continue
             event = {"event": name}

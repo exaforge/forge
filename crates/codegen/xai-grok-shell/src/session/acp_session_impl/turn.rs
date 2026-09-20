@@ -2164,6 +2164,23 @@ impl SessionActor {
                 .await
                 .expect("chat state actor should be alive");
             request_build.finish("completed");
+            if crate::observation::enabled() {
+                crate::observation::record(serde_json::json!({
+                    "event": "request_context",
+                    "session_id": self.session_info.id.0.as_ref(),
+                    "prompt_id": req_id,
+                    "loop_index": loop_index,
+                    // Copies currently omitted in this request, not a count of
+                    // new reductions or unique source files across the run.
+                    "reduced_read_results": request.items.iter().filter(|item| {
+                        matches!(item, ConversationItem::ToolResult(result)
+                            if result.content.starts_with("[Repeated file read omitted:"))
+                    }).count(),
+                    "tool_description_bytes": request.tools.iter().map(|tool|
+                        tool.description.as_ref().map_or(0, |description| description.len())
+                    ).sum::<usize>(),
+                }));
+            }
             xai_grok_telemetry::unified_log::debug(
                 "shell.turn.build_request_done",
                 Some(self.session_info.id.0.as_ref()),

@@ -63,6 +63,14 @@ Separate binary paths can be used when needed.
 one response. It preserves the same tools, execution policy and reasoning effort.
 Compare it against `forge-optimized` to isolate this prompt experiment.
 
+`forge-output-budget-only` enables `FORGE_TOOL_OUTPUT_BUDGET=1` on the same
+local-coding baseline: implicit native read windows shrink from 1,000 to 300
+lines, and implicit terminal previews from 20,000 to 8,000 characters. Explicit
+limits/configuration retain precedence. Reads explain how to fetch more; terminal
+results retain head/tail context and a full-log reference. Instruction/skill files
+and document/image reads retain their existing behavior. Smaller previews can
+cause extra follow-up reads, so token savings do not establish a speed gain.
+
 ```sh
 python3 eval/run.py run --profiles /absolute/path/profiles.json \
   --profile forge-baseline --profile forge-optimized \

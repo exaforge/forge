@@ -2,6 +2,43 @@ use std::collections::HashMap;
 
 const MAX_LINES_READ_DEFAULT: usize = 1_000;
 
+/// Opt-in defaults for local coding tools. Explicit tool/config limits win.
+/// Kept in Resources only when a caller needs to pin the policy (e.g. tests);
+/// normal calls resolve the process flag without mutating shared configuration.
+#[derive(Debug, Clone, Copy, Default)]
+pub(crate) struct ToolOutputBudget(pub(crate) bool);
+
+impl ToolOutputBudget {
+    pub(crate) fn from_env() -> Self {
+        Self::from_value(std::env::var("FORGE_TOOL_OUTPUT_BUDGET").ok().as_deref())
+    }
+
+    fn from_value(value: Option<&str>) -> Self {
+        Self(value == Some("1"))
+    }
+
+    pub(crate) fn read_limit(self, config: &TruncationConfig, requested: Option<usize>) -> usize {
+        if self.0 && requested.is_none() && config.max_lines_read.is_none() {
+            300
+        } else {
+            requested.unwrap_or(usize::MAX).min(config.max_lines_read())
+        }
+    }
+
+    pub(crate) fn terminal_limit(
+        self,
+        config: &TruncationConfig,
+        configured: Option<usize>,
+    ) -> usize {
+        let fallback = configured.unwrap_or(if self.0 {
+            8_000
+        } else {
+            crate::DEFAULT_TOOL_OUTPUT_CHARS
+        });
+        config.max_output_bytes_for("run_terminal_cmd", fallback)
+    }
+}
+
 /// Client-configurable truncation settings.
 /// All fields are optional — `None` means "use the tool's built-in default".
 ///
@@ -82,7 +119,12 @@ impl TruncationConfig {
         max_wait_ms: u64,
     ) -> String {
         description
-            .replace("{max_lines_read}", &self.max_lines_read().to_string())
+            .replace(
+                "{max_lines_read}",
+                &ToolOutputBudget::from_env()
+                    .read_limit(self, None)
+                    .to_string(),
+            )
             .replace(
                 "{max_wait_ms}",
                 &xai_tool_types::format_wait_cap_ms(max_wait_ms),
@@ -144,6 +186,38 @@ impl TruncationConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tool_output_budget_defaults_and_explicit_limits() {
+        let defaults = TruncationConfig::default();
+        for value in [None, Some("0"), Some("true"), Some("")] {
+            let budget = ToolOutputBudget::from_value(value);
+            assert_eq!(budget.read_limit(&defaults, None), 1_000);
+            assert_eq!(
+                budget.terminal_limit(&defaults, None),
+                crate::DEFAULT_TOOL_OUTPUT_CHARS
+            );
+        }
+        let budget = ToolOutputBudget::from_value(Some("1"));
+        assert_eq!(budget.read_limit(&defaults, None), 300);
+        assert_eq!(budget.read_limit(&defaults, Some(700)), 700);
+        assert_eq!(budget.read_limit(&defaults, Some(50)), 50);
+        assert_eq!(budget.read_limit(&defaults, Some(2_000)), 1_000);
+        assert_eq!(budget.terminal_limit(&defaults, None), 8_000);
+        assert_eq!(budget.terminal_limit(&defaults, Some(25_000)), 25_000);
+        let configured = TruncationConfig {
+            max_lines_read: Some(800),
+            default_max_output_bytes: Some(30_000),
+            ..Default::default()
+        };
+        assert_eq!(budget.read_limit(&configured, None), 800);
+        assert_eq!(budget.terminal_limit(&configured, None), 30_000);
+        let per_tool = TruncationConfig {
+            per_tool_max_output_bytes: HashMap::from([("run_terminal_cmd".to_string(), 12_000)]),
+            ..configured
+        };
+        assert_eq!(budget.terminal_limit(&per_tool, Some(25_000)), 12_000);
+    }
 
     #[test]
     fn max_lines_read_default_and_override() {

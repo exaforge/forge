@@ -9,7 +9,7 @@
 use crate::implementations::read_file::{
     handle_pdf, is_pdf_file, raw_text_to_file_content, run_document_extraction,
 };
-use crate::types::context::TruncationConfig;
+use crate::types::context::{ToolOutputBudget, TruncationConfig};
 use crate::types::output::{FileContent, ReadFileOutput};
 use crate::types::requirements::{Expr, ToolRequirement};
 use crate::types::resources::Params;
@@ -210,6 +210,30 @@ fn is_skill_markdown(path: &std::path::Path) -> bool {
         }
     }
     stack.into_iter().any(|c| c == "skills")
+}
+
+fn is_instruction_file(path: &std::path::Path) -> bool {
+    // Exempt casing variants too, including on case-insensitive filesystems.
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| {
+            ["AGENTS.md", "CLAUDE.md", "GEMINI.md", ".cursorrules"]
+                .iter()
+                .any(|instruction| name.eq_ignore_ascii_case(instruction))
+        })
+}
+
+pub(crate) fn budget_continuation_notice(
+    offset: Option<usize>,
+    limit: usize,
+    total_lines: usize,
+    param_names: &crate::types::resources::InvokingToolParamNames,
+) -> Option<String> {
+    let next = offset.unwrap_or(1).max(1).saturating_add(limit);
+    (next <= total_lines).then(|| format!(
+        "\n\n[Default output budget: more lines are available. Continue with {}={} and {}={}, or request an explicit larger line limit.]",
+        param_names.resolve("offset"), next, param_names.resolve("limit"), limit,
+    ))
 }
 /// Result of extracting file content lines with both default and concise formats
 pub struct ExtractedContent {
@@ -492,11 +516,21 @@ pub(crate) async fn run_read_file(
         }));
     }
     let total_lines = file_content.matches('\n').count() + 1;
-    let max_lines = {
+    let (max_lines, budgeted_default) = {
         let res = resources.lock().await;
-        res.get::<TruncationCfg>()
-            .map(|t| t.0.max_lines_read())
-            .unwrap_or_else(|| TruncationConfig::default().max_lines_read())
+        let default = TruncationConfig::default();
+        let config = res.get::<TruncationCfg>().map(|t| &t.0).unwrap_or(&default);
+        let policy = if is_instruction_file(&path) {
+            ToolOutputBudget(false)
+        } else {
+            res.get::<ToolOutputBudget>()
+                .copied()
+                .unwrap_or_else(ToolOutputBudget::from_env)
+        };
+        (
+            policy.read_limit(config, input.limit),
+            policy.0 && input.limit.is_none() && config.max_lines_read.is_none(),
+        )
     };
     let (effective_offset, effective_limit) = if is_skill_markdown {
         (None, None)
@@ -564,13 +598,34 @@ pub(crate) async fn run_read_file(
     let (stored_offset, stored_limit) = if is_skill_markdown {
         (None, None)
     } else {
-        (stored_read_offset(input.offset), input.limit)
+        (
+            if budgeted_default {
+                Some(resolve_read_start_line(&file_content, effective_offset))
+            } else {
+                stored_read_offset(input.offset)
+            },
+            if budgeted_default {
+                effective_limit
+            } else {
+                input.limit
+            },
+        )
     };
     if let Some(flag) = streamable_out {
         *flag = true;
     }
     let mut content = extracted.content;
     let mut content_concise = Some(extracted.content_concise);
+    if budgeted_default && !is_skill_markdown {
+        if let Some(notice) =
+            budget_continuation_notice(stored_offset, max_lines, total_lines, invoking_param_names)
+        {
+            content.push_str(&notice);
+            if let Some(concise) = &mut content_concise {
+                concise.push_str(&notice);
+            }
+        }
+    }
     let extracted_images = extracted.extracted_images;
     crate::implementations::cursor_rules_on_read::append_cursor_rules_for_read(
         cursor_rules_on_read_enabled(&resources).await,
@@ -753,6 +808,74 @@ mod tests {
         resources.insert(FileSystem(Arc::new(LocalFs)));
         resources.insert(NotificationHandle(ToolNotificationHandle::noop()));
         resources
+    }
+    #[tokio::test]
+    async fn tool_output_budget_read_windows_preserve_explicit_limits_and_instructions() {
+        let tmp = TempDir::new().unwrap();
+        let original = (1..=750)
+            .map(|line| format!("line_{line:04}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        for (enabled, limit, configured, offset, name, expected_lines, notice) in [
+            (false, None, None, None, "source.py", 750, false),
+            (true, None, None, None, "source.py", 300, true),
+            (true, None, None, Some(301), "source.py", 300, true),
+            (true, None, None, Some(-451), "source.py", 300, true),
+            (true, Some(700), None, None, "source.py", 700, false),
+            (true, None, Some(600), None, "source.py", 600, false),
+            (true, None, None, None, "AGENTS.md", 750, false),
+            (true, None, None, None, "agents.md", 750, false),
+            (true, None, None, None, "SKILL.md", 750, false),
+        ] {
+            std::fs::write(tmp.path().join(name), &original).unwrap();
+            let mut resources = test_resources(tmp.path());
+            resources.insert(ToolOutputBudget(enabled));
+            resources.insert(TruncationCfg(TruncationConfig {
+                max_lines_read: configured,
+                ..Default::default()
+            }));
+            let input = ReadFileInput {
+                path: name.to_owned(),
+                offset,
+                limit,
+                pages: None,
+                format: None,
+            };
+            let result = xai_tool_runtime::Tool::run(
+                &ReadFileTool,
+                test_ctx(resources.into_shared()),
+                input,
+            )
+            .await
+            .unwrap();
+            let ReadFileOutput::FileContent(output) = result else {
+                panic!("expected file content")
+            };
+            assert_eq!(
+                output.raw_output.lines().count(),
+                expected_lines,
+                "{name} {enabled} {limit:?} {configured:?}"
+            );
+            assert_eq!(output.content.contains("Default output budget"), notice);
+            if notice {
+                assert_eq!(output.limit, Some(300));
+                let start = if offset == Some(-451) {
+                    301
+                } else {
+                    offset.unwrap_or(1)
+                };
+                assert!(output.content.contains(&format!("offset={}", start + 300)));
+            }
+            if offset == Some(301) || offset == Some(-451) {
+                assert_eq!(output.offset, Some(301));
+                assert!(output.content.contains("301→line_0301"));
+                assert!(!output.raw_output.contains("line_0300"));
+            }
+            assert_eq!(
+                std::fs::read_to_string(tmp.path().join(name)).unwrap(),
+                original
+            );
+        }
     }
     #[tokio::test]
     async fn read_file_basic() {

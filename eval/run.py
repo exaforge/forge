@@ -30,6 +30,7 @@ SAFE_ID = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,79}\Z")
 PLACEHOLDERS = {"prompt", "workspace", "model", "effort", "max_turns", "run_id", "python"}
 ALLOWED_ENV = {"FORGE_PROMPT_CACHE", "FORGE_CONTEXT_FAST_PATH", "GROK_SAMPLER_SHARED_CLIENT",
                "FORGE_BATCH_READS",
+               "FORGE_TOOL_OUTPUT_BUDGET",
                "GROK_POOL_MAX_IDLE", "GROK_POOL_IDLE_TIMEOUT_SECS", "GROK_CONNECT_TIMEOUT_SECS"}
 USAGE_FIELDS = ("input_tokens", "output_tokens", "cached_input_tokens",
                 "cache_creation_input_tokens", "reasoning_tokens", "total_tokens")

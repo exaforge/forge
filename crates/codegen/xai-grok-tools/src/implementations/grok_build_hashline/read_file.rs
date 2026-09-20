@@ -6,7 +6,9 @@
 //!
 //! Output format: `ANCHOR→CONTENT` (e.g. `22:abc:rst→  let x = 1;`).
 
-use crate::implementations::grok_build::read_file::{ReadFileInput, run_read_file};
+use crate::implementations::grok_build::read_file::{
+    ReadFileInput, budget_continuation_notice, run_read_file,
+};
 use crate::types::context::TruncationConfig;
 
 use crate::types::output::ReadFileOutput;
@@ -189,6 +191,7 @@ impl xai_tool_runtime::Tool for HashlineReadTool {
         // `None`: the hashline tool does not stream, so it needs no
         // text-path streamability signal (see `run_read_file`).
         let invoking = crate::types::tool_metadata::invoking_param_names(&ctx);
+        let omitted_limit = input.limit.is_none();
         let result = run_read_file(
             input,
             cwd_override,
@@ -237,6 +240,17 @@ impl xai_tool_runtime::Tool for HashlineReadTool {
                     format_hashline_content(&full_content, fc.offset, effective_limit, &*scheme);
 
                 fc.content = hashline_content;
+                // run_read_file stores an implicit budget as a real window so
+                // anchors and read tracking agree. Preserve its recovery hint.
+                if omitted_limit {
+                    if let Some(limit) = fc.limit {
+                        if let Some(notice) =
+                            budget_continuation_notice(fc.offset, limit, fc.total_lines, &invoking)
+                        {
+                            fc.content.push_str(&notice);
+                        }
+                    }
+                }
                 fc.content_concise = None; // hashline has only one format
                 // Drop tool-layer captures: `hashline_content` keeps the
                 // original URIs intact, so session-layer extraction will
@@ -413,6 +427,44 @@ mod tests {
             !rendered.contains("offset and limit for large files"),
             "canonical offset/limit must not remain after rename:\n{rendered}"
         );
+    }
+
+    #[tokio::test]
+    async fn tool_output_budget_hashline_window_and_recovery_agree() {
+        let tmp = TempDir::new().unwrap();
+        let original = (1..=650)
+            .map(|line| format!("line_{line:04}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        std::fs::write(tmp.path().join("source.rs"), original).unwrap();
+        let mut resources = test_resources(tmp.path());
+        resources.insert(crate::types::context::ToolOutputBudget(true));
+        let input = ReadFileInput {
+            path: "source.rs".to_owned(),
+            // With 650 lines and no trailing newline, the existing negative
+            // offset semantics resolve -351 to line 301.
+            offset: Some(-351),
+            limit: None,
+            pages: None,
+            format: None,
+        };
+        let result = xai_tool_runtime::Tool::run(
+            &HashlineReadTool,
+            test_ctx(resources.into_shared()),
+            input,
+        )
+        .await
+        .unwrap();
+        let ReadFileOutput::FileContent(output) = result else {
+            panic!("expected file content")
+        };
+        assert_eq!(output.limit, Some(300));
+        assert_eq!(output.offset, Some(301));
+        assert_eq!(output.raw_output.lines().count(), 300);
+        assert!(output.content.starts_with("301:"));
+        assert!(output.content.contains("→line_0600"));
+        assert!(!output.content.contains("→line_0601"));
+        assert!(output.content.contains("offset=601"));
     }
 
     #[tokio::test]

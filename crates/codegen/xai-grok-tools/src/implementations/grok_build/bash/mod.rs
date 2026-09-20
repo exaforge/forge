@@ -28,13 +28,13 @@ use std::time::Duration;
 use regex::Regex;
 use xai_grok_config::shell::AmpersandSemantics;
 
-use crate::DEFAULT_TOOL_OUTPUT_CHARS;
 use crate::computer::types::{ComputerError, TerminalRunRequest};
 use crate::notification::types::{
     BashExecutionBackgrounded, BashExecutionComplete, BashExecutionFailed, BashExecutionTimeout,
     BashNotificationBase, BashOutputChunk, PerCallNotificationSink, ToolNotification,
     ToolNotificationHandle,
 };
+use crate::types::context::{ToolOutputBudget, TruncationConfig};
 use crate::types::definition::ToolDefinition;
 use crate::types::output::{BackgroundTaskStarted, BashOutput};
 use crate::types::requirements::{Expr, ToolParamsRequirement, ToolRequirement};
@@ -1881,20 +1881,20 @@ impl xai_tool_runtime::Tool for BashTool {
         let config_timeout = Duration::from_millis(Self::effective_default_timeout_ms(&params));
         let background_enabled = Self::background_enabled(&params);
 
-        let config_output_byte_limit = params
-            .output_byte_limit
-            .unwrap_or(DEFAULT_TOOL_OUTPUT_CHARS);
-
-        // Use truncation config override if available
-        let output_byte_limit = resources
-            .lock()
-            .await
-            .get::<TruncationCfg>()
-            .map(|cfg| {
-                cfg.0
-                    .max_output_bytes_for("run_terminal_cmd", config_output_byte_limit)
-            })
-            .unwrap_or(config_output_byte_limit);
+        // Only the implicit default changes; explicit per-tool/default/params
+        // limits retain their existing precedence and the terminal keeps its log.
+        let output_byte_limit = {
+            let res = resources.lock().await;
+            let defaults = TruncationConfig::default();
+            let config = res
+                .get::<TruncationCfg>()
+                .map(|cfg| &cfg.0)
+                .unwrap_or(&defaults);
+            res.get::<ToolOutputBudget>()
+                .copied()
+                .unwrap_or_else(ToolOutputBudget::from_env)
+                .terminal_limit(config, params.output_byte_limit)
+        };
 
         // --- Validate: reject commands that use `&` as a background operator ---
         let version = BashVersion::from_contract(
@@ -2635,6 +2635,47 @@ mod tests {
             ]),
         ));
         (resources, tmp)
+    }
+
+    #[tokio::test]
+    async fn tool_output_budget_preserves_terminal_errors_and_full_log() {
+        for (enabled, configured, truncated) in [
+            (false, None, false),
+            (true, None, true),
+            (true, Some(20_000), false),
+        ] {
+            let (mut resources, _tmp) = make_real_resources(configured);
+            resources.insert(ToolOutputBudget(enabled));
+            let input = make_input(
+                "printf 'START_CONTEXT\\n'; i=0; while [ $i -lt 600 ]; do printf 'MIDDLE-%04d-abcdefgh\\n' $i; i=$((i+1)); done; printf 'FINAL_ERROR_CONTEXT\\n' >&2; exit 7",
+            );
+            let result =
+                xai_tool_runtime::Tool::run(&BashTool, test_ctx(resources.into_shared()), input)
+                    .await
+                    .unwrap();
+            let BashToolOutput::Foreground(output) = result else {
+                panic!("expected completed foreground output")
+            };
+            let inline = String::from_utf8_lossy(&output.output);
+            assert_eq!(output.exit_code, 7);
+            assert_eq!(output.truncated, truncated);
+            assert!(inline.contains("START_CONTEXT"));
+            assert!(inline.contains("FINAL_ERROR_CONTEXT"));
+            let full = std::fs::read_to_string(&output.output_file).unwrap();
+            assert!(full.contains("MIDDLE-0300-abcdefgh"));
+            assert!(full.contains("FINAL_ERROR_CONTEXT"));
+            assert!(full.len() > 8_000);
+            if truncated {
+                assert!(inline.len() < 9_000);
+                assert!(!inline.contains("MIDDLE-0300-abcdefgh"));
+                let prompt = format_default_prompt(&output);
+                assert!(prompt.contains("exit: 7"));
+                assert!(prompt.contains("full output at:"));
+                assert!(prompt.contains(&output.output_file));
+            } else {
+                assert!(inline.contains("MIDDLE-0300-abcdefgh"));
+            }
+        }
     }
 
     /// Destructure a `bash_output_chunk` payload, asserting the canonical

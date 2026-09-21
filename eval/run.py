@@ -295,10 +295,12 @@ def protocol_metadata(kind, stdout, complete):
     objects = parse_objects(stdout)
     terminals, usage_rows = [], []
     status, scope = "unobserved", "unavailable"
+    forge_error_seen = False
     for obj in objects:
-        if kind in {"forge", "fake"} and ("stopReason" in obj or "error" in obj):
+        if kind in {"forge", "fake"} and ("stopReason" in obj or "error" in obj or obj.get("type") == "error"):
             terminals.append(obj)
-            status = "completed" if obj.get("stopReason") in {"end_turn", "EndTurn"} else "incomplete_or_error"
+            forge_error_seen |= "error" in obj or obj.get("type") == "error"
+            status = "completed" if not forge_error_seen and obj.get("stopReason") in {"end_turn", "EndTurn"} else "incomplete_or_error"
             if isinstance(obj.get("usage"), dict):
                 usage_rows = [obj["usage"]]
                 scope = "headless_prompt_ledger_uncached_input_auxiliary_calls_excluded"

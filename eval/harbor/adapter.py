@@ -39,7 +39,7 @@ def make_spec(profile, binary, instruction_path, max_turns, timeout_seconds):
                 "sandbox": "harbor_docker; nested_forge_sandbox_off",
                 "optimization_env": profile.get("env", {})}
     identity["adapter_sources_sha256"] = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
-                                          for path in (HERE / "adapter.py", HERE / "container_runner.py",
+                                          for path in (HERE / "adapter.py", HERE / "container_runner.py", HERE / "preflight.py",
                                                        EVAL / "run.py", EVAL / "fixtures.py", EVAL / "verify.py")}
     return {"argv": argv, "env": profile.get("env", {}), "model": profile["model"],
             "timeout_seconds": timeout_seconds, "identity": identity}
@@ -77,6 +77,7 @@ class ForgeInstalledAgent(BaseInstalledAgent):
         for filename in ("run.py", "fixtures.py", "verify.py"):
             await environment.upload_file(EVAL / filename, f"{REMOTE}/{filename}")
         await environment.upload_file(HERE / "container_runner.py", f"{REMOTE}/container_runner.py")
+        await environment.upload_file(HERE / "preflight.py", f"{REMOTE}/preflight.py")
         await self.exec_as_root(environment, "chmod 755 /installed-agent/forge && /installed-agent/forge --version >/dev/null && test -r /root/.codex/auth.json")
 
     @with_prompt_template

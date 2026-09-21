@@ -11,7 +11,7 @@ import sys
 import tempfile
 import uuid
 
-from preflight import auth_mount, binary_identity, require_harbor
+from preflight import auth_mount, binary_identity, require_harbor, sampler_error_metadata
 
 HERE = Path(__file__).resolve().parent
 
@@ -57,7 +57,7 @@ def public_forge_report(report):
     projected["protocol"]["completed"] = protocol.get("status") == "completed"
     for row in report.get("requests", [])[:10000]:
         if isinstance(row, dict):
-            projected["requests"].append({**numbers(row), "usage_is_final": row.get("usage_is_final") is True,
+            projected["requests"].append({**numbers(row), **sampler_error_metadata(row), "usage_is_final": row.get("usage_is_final") is True,
                                           "provider_usage": numbers(row.get("provider_usage"))})
     usage = projected["harbor_usage"]
     usage_valid = all(type(usage.get(key)) is int and usage[key] >= 0
@@ -82,6 +82,43 @@ def elapsed_ms(timing):
         return None
 
 
+def failure_timing(raw):
+    """Locate exception recording without treating a later verifier as its cause."""
+    def timestamp(value):
+        try:
+            parsed = datetime.fromisoformat(value)
+            return parsed if parsed.utcoffset() is not None else None
+        except (TypeError, ValueError):
+            return None
+    phases = []
+    for name in ("environment_setup", "agent_setup", "agent_execution", "verifier"):
+        timing = raw.get(name) or {}
+        start, end = timestamp(timing.get("started_at")), timestamp(timing.get("finished_at"))
+        if start is not None and (end is None or end >= start):
+            phases.append((start, end, name))
+    phases.sort(key=lambda phase: phase[0])
+    result = {"stage": "unknown", "last_started_phase": phases[-1][2] if phases else "unknown",
+              "preceding_phase": None, "next_phase": None}
+    occurred = timestamp((raw.get("exception_info") or {}).get("occurred_at"))
+    if occurred is None or not phases:
+        return result
+    active = [phase for phase in phases if phase[0] <= occurred and (phase[1] is None or occurred <= phase[1])]
+    if active:
+        result["stage"] = active[-1][2]
+    elif occurred < phases[0][0]:
+        result["stage"] = "initialization"
+        result["next_phase"] = phases[0][2]
+    else:
+        # Harbor closes the agent interval in finally before recording its error.
+        # Keep this gap explicit instead of assigning that error to the verifier.
+        previous = [phase for phase in phases if phase[1] is not None and phase[1] < occurred]
+        following = [phase for phase in phases if phase[0] > occurred]
+        result["stage"] = "between_recorded_phases" if following else "after_recorded_phases"
+        result["preceding_phase"] = max(previous, key=lambda phase: phase[1])[2] if previous else None
+        result["next_phase"] = following[0][2] if following else None
+    return result
+
+
 def export_trial(raw, forge_report, oracle=False):
     forge_report = public_forge_report(forge_report)
     rewards = (raw.get("verifier_result") or {}).get("rewards") or {}
@@ -95,11 +132,7 @@ def export_trial(raw, forge_report, oracle=False):
         allowed = {"RuntimeError", "ValueError", "FileNotFoundError", "PermissionError",
                    "AgentSetupTimeoutError", "AgentTimeoutError", "VerifierTimeoutError",
                    "EnvironmentStartTimeoutError", "NonZeroAgentExitCodeError", "ApiError", "ApiRateLimitError"}
-        phase = "initialization"
-        for candidate in ("environment_setup", "agent_setup", "agent_execution", "verifier"):
-            if (raw.get(candidate) or {}).get("started_at"):
-                phase = candidate
-        failure = {"stage": phase, "category": kind if kind in allowed else "other_harbor_exception"}
+        failure = {**failure_timing(raw), "category": kind if kind in allowed else "other_harbor_exception"}
     metadata_ok = oracle or bool(forge_report and forge_report.get("metadata_complete") is True
                                and forge_report["process"]["completed"] and forge_report["protocol"]["completed"])
     return {"schema_version": 1, "harbor_version": "0.23.0", "oracle": oracle,
@@ -128,6 +161,8 @@ def main():
     parser.add_argument("--timeout-seconds", type=int, default=110)
     args = parser.parse_args()
     require_harbor()
+    launcher_sources = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                        for path in (HERE / "launch.py", HERE / "preflight.py")}
     task = args.task.resolve(strict=True)
     if not (task / "task.toml").is_file():
         parser.error("--task must be one Harbor task directory")
@@ -193,6 +228,7 @@ def main():
                                  "attempts": 1, "concurrency": 1, "retries": 0}
         report["binary"] = binary
         report["build_provenance"] = build_provenance
+        report["launcher_sources_sha256"] = launcher_sources
         if not args.oracle:
             from adapter import load_profile, make_spec
             report["configuration"] = make_spec(load_profile(args.profile, args.model), binary, "unused",

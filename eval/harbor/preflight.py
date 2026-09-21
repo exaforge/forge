@@ -5,6 +5,15 @@ from pathlib import Path
 import struct
 
 HARBOR_VERSION = "0.23.0"
+# Mirrors the stable SamplingErrorKind::as_str vocabulary; unknown strings stay absent.
+SAMPLER_ERROR_KINDS = frozenset({"auth", "http", "api", "serialization", "idle_timeout",
+                               "rate_limited", "empty_response", "max_tokens_truncation", "doom_loop_detected"})
+
+
+def sampler_error_metadata(row):
+    kind, status = row.get("error_kind"), row.get("status_code")
+    return {"error_kind": kind if isinstance(kind, str) and kind in SAMPLER_ERROR_KINDS else None,
+            "status_code": status if type(status) is int and 100 <= status <= 599 else None}
 
 
 def require_harbor():

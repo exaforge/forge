@@ -81,6 +81,27 @@ class EvaluatorTests(unittest.TestCase):
         self.assertTrue(result["verification"]["passed"])
         self.assertFalse(result["successful_verified_run"])
 
+    def test_forge_json_error_terminal_is_observed_and_payload_discarded(self):
+        # This is the actual --output-format json error shape from HeadlessEmitter.
+        error = {"type": "error", "message": "DO_NOT_PERSIST provider body or credential path",
+                 "usage": {"input_tokens": 5, "cache_read_input_tokens": 3,
+                           "cache_creation_input_tokens": 0, "output_tokens": 2}}
+        completed = {"stopReason": "end_turn", "usage": error["usage"]}
+        for payload, terminals in ((json.dumps(error), 1),
+                                   (json.dumps(error | {"stopReason": "end_turn"}), 1),
+                                   (json.dumps(error) + "\n" + json.dumps(completed), 2)):
+            with self.subTest(payload=payload):
+                result = run.protocol_metadata("forge", payload, True)
+                self.assertEqual(result["status"], "incomplete_or_error")
+                self.assertEqual(result["terminal_events"], terminals)
+                self.assertEqual(result["usage_coverage"], "partial")
+                self.assertEqual(result["usage"]["input_tokens"], 5)
+                self.assertNotIn("DO_NOT_PERSIST", json.dumps(result))
+                self.assertNotIn("message", result)
+        missing_usage = run.protocol_metadata("forge", json.dumps({"type": "error", "message": "DO_NOT_PERSIST"}), True)
+        self.assertEqual(missing_usage["status"], "incomplete_or_error")
+        self.assertEqual(missing_usage["usage_coverage"], "unavailable")
+
     def test_phase_metadata_is_retained_without_unknown_payloads(self):
         path = self.root / "observations.jsonl"
         event = {"schema_version": 1, "run_id": "phase-run", "event": "phase_end",

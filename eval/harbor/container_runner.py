@@ -10,6 +10,7 @@ import uuid
 
 # Shared, tested metadata parsers; these three source files are installed alongside us.
 import run as evaluation
+from preflight import sampler_error_metadata
 
 
 def safe_requests(events):
@@ -21,6 +22,7 @@ def safe_requests(events):
         if event["event"] != "sampler_attempt_finished":
             continue
         row = {key: evaluation.number(event.get(key)) for key in fields}
+        row.update(sampler_error_metadata(event))
         row["usage_is_final"] = event.get("usage_is_final") is True
         row["provider_usage"] = {key: evaluation.number((event.get("provider_usage") or {}).get(key))
                                  for key in evaluation.USAGE_FIELDS}

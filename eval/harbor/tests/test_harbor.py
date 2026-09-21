@@ -89,6 +89,26 @@ class HarborTests(unittest.TestCase):
         self.assertIsNone(report["harbor_usage"]["cost_usd"])
         self.assertNotIn("DO_NOT_PERSIST", json.dumps(report))
 
+    def test_sampler_failure_diagnostics_keep_only_http_number_and_fixed_kind(self):
+        report, events, _ = healthy_report()
+        attempt = events[2] | {"error_kind": "auth", "status_code": 401, "message": "DO_NOT_PERSIST"}
+        report["requests"] = container_runner.safe_requests([attempt])
+        public = launch.public_forge_report(report)
+        self.assertEqual(public["requests"][0]["error_kind"], "auth")
+        self.assertEqual(public["requests"][0]["status_code"], 401)
+        self.assertNotIn("DO_NOT_PERSIST", json.dumps(public))
+        for kind, status in (("DO_NOT_PERSIST", "401"), ({"DO_NOT_PERSIST": 1}, True), (None, -1), ("api", 401.0)):
+            malformed = attempt | {"error_kind": kind, "status_code": status}
+            sanitized = container_runner.safe_requests([malformed])[0]
+            self.assertIsNone(sanitized["status_code"])
+            if kind != "api":
+                self.assertIsNone(sanitized["error_kind"])
+            # The outer boundary must apply the same restrictions even if the inner log is modified.
+            report["requests"] = [malformed]
+            public = launch.public_forge_report(report)
+            self.assertIsNone(public["requests"][0]["status_code"])
+            self.assertNotIn("DO_NOT_PERSIST", json.dumps(public))
+
     def test_missing_footer_duplicate_or_incomplete_usage_fail_closed(self):
         _, events, stdout = healthy_report()
         variants = [events[:-1], events + [events[2]],
@@ -110,14 +130,36 @@ class HarborTests(unittest.TestCase):
         self.assertFalse(launch.export_trial(raw | {"verifier_result": {"rewards": {"reward": 0}}}, report)["verified_success"])
         self.assertFalse(launch.export_trial(raw | {"exception_info": {}}, report)["verified_success"])
         self.assertFalse(launch.export_trial(raw, None)["verified_success"])
-        setup_failure = launch.export_trial(raw | {"exception_info": {"exception_type": "RuntimeError", "exception_message": "DO_NOT_PERSIST"},
+        setup_failure = launch.export_trial(raw | {"exception_info": {"exception_type": "RuntimeError", "exception_message": "DO_NOT_PERSIST",
+                                                                     "occurred_at": "2026-09-20T00:00:01+00:00"},
                                                   "agent_setup": {"started_at": "2026-09-20T00:00:00+00:00"}}, None)
-        self.assertEqual(setup_failure["harbor_failure"], {"stage": "agent_setup", "category": "RuntimeError"})
+        self.assertEqual(setup_failure["harbor_failure"], {"stage": "agent_setup", "category": "RuntimeError",
+                                                          "last_started_phase": "agent_setup", "preceding_phase": None, "next_phase": None})
         self.assertNotIn("DO_NOT_PERSIST", json.dumps(setup_failure))
         for section in ("process", "protocol"):
             broken = copy.deepcopy(report)
             broken[section]["status"] = "failed"
             self.assertFalse(launch.export_trial(raw, broken)["verified_success"])
+
+    def test_exception_recorded_after_agent_exit_is_not_assigned_to_later_verifier(self):
+        def at(second):
+            return f"2026-09-20T00:00:{second:02d}+00:00"
+        raw = {"agent_execution": {"started_at": at(10), "finished_at": at(20)},
+               "verifier": {"started_at": at(30), "finished_at": at(40)},
+               "exception_info": {"exception_type": "NonZeroAgentExitCodeError", "occurred_at": at(21),
+                                  "exception_message": "DO_NOT_PERSIST"},
+               "verifier_result": {"rewards": {"reward": 1}}}
+        result = launch.export_trial(raw, None)
+        self.assertEqual(result["harbor_failure"], {"stage": "between_recorded_phases",
+                         "category": "NonZeroAgentExitCodeError", "preceding_phase": "agent_execution",
+                         "next_phase": "verifier", "last_started_phase": "verifier"})
+        self.assertFalse(result["verified_success"])
+        self.assertNotIn("DO_NOT_PERSIST", json.dumps(result))
+        for occurred, expected in ((at(15), "agent_execution"), (at(35), "verifier"),
+                                   (at(5), "initialization"), (at(45), "after_recorded_phases"),
+                                   (None, "unknown"), ("DO_NOT_PERSIST", "unknown")):
+            raw["exception_info"]["occurred_at"] = occurred
+            self.assertEqual(launch.export_trial(raw, None)["harbor_failure"]["stage"], expected)
 
     def test_export_drops_unknown_fields_strings_and_mount_paths(self):
         report, _, _ = healthy_report()

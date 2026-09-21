@@ -87,7 +87,7 @@ TASKS = {
     },
     "test-diagnosis": {
         "category": "test diagnosis",
-        "prompt": "Diagnose the failing retry tests and fix retrying.retry(call, attempts, retry_on=(ValueError,), wait=lambda: None). attempts is the maximum total number of call invocations, must be a positive integer (bool is invalid). Retry only the supplied exception types, call wait exactly once between failed retryable attempts, return the successful value, and re-raise the final exception on exhaustion. Preserve non-retryable exceptions without waiting. Run tests; do not modify tests.",
+        "prompt": "Diagnose the failing retry tests and fix retrying.retry(call, attempts, retry_on=(ValueError,), wait=lambda: None). attempts is the maximum total number of call invocations, must be a positive integer (bool is invalid). For any invalid attempts value, raise ValueError before invoking call. Retry only the supplied exception types, call wait exactly once between failed retryable attempts, return the successful value, and re-raise the final exception on exhaustion. Preserve non-retryable exceptions without waiting. Run tests; do not modify tests.",
         "files": {
             "retrying.py": source('''
                 def retry(call, attempts, retry_on=(ValueError,), wait=lambda: None):

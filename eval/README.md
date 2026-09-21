@@ -262,6 +262,10 @@ isolates that switch with three repetitions and includes a fresh Codex reference
 It reduced first-request input but did not improve total task time or input usage.
 The report retains the original verifier failure, its task-contract ambiguity,
 paired comparisons, coverage counts, and all attempt metadata.
+The [subsequent fixture clarification](fixture-revisions.md) makes the retry
+task's exception contract explicit and adds per-input failure labels for future
+runs. Historical scores and evidence are unchanged; use the recorded checkout
+to reproduce historical workloads and a new directory for revised fixtures.
 See [Claude compatibility](claude-compatibility.md) for the investigated protocol
 and authentication boundaries; no unvalidated proxy is part of these results.
 

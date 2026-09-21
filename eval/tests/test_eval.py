@@ -179,6 +179,35 @@ class EvaluatorTests(unittest.TestCase):
             result = run.verify("test-diagnosis", workspace, verifier, run.file_digest(verifier), 10)
             self.assertEqual(result["status"], "failed", mode)
 
+    def test_invalid_attempt_failures_identify_input_and_rejection_behavior(self):
+        cases = (("zero", 0), ("negative", -1), ("bool", True), ("float", 1.5), ("string", "2"))
+        behaviors = {
+            "wrong-exception": "raise TypeError('DO_NOT_PERSIST')",
+            "returns": "return None",
+            "calls-before-rejection": "call()\n        raise ValueError('DO_NOT_PERSIST')",
+        }
+        verifier = EVAL / "verify.py"
+        for case, value in cases:
+            for mode, behavior in behaviors.items():
+                with self.subTest(case=case, mode=mode):
+                    workspace = self.root / f"{case}-{mode}"
+                    workspace.mkdir()
+                    materialize("test-diagnosis", workspace)
+                    solve(workspace)
+                    path = workspace / "retrying.py"
+                    path.write_text(path.read_text() + "\n_original_retry = retry\n"
+                        "def retry(call, attempts, retry_on=(ValueError,), wait=lambda: None):\n"
+                        f"    if type(attempts) is {type(value).__name__} and attempts == {value!r}:\n"
+                        f"        {behavior}\n"
+                        "    return _original_retry(call, attempts, retry_on=retry_on, wait=wait)\n")
+                    result = run.verify("test-diagnosis", workspace, verifier, run.file_digest(verifier), 10)
+                    suffix = "-no-call" if mode == "calls-before-rejection" else ""
+                    self.assertEqual(result["status"], "failed")
+                    self.assertEqual(result["checks_total"], 20)
+                    self.assertEqual(result["checks_passed"], 19)
+                    self.assertEqual(result["failed_checks"], [f"invalid-attempts{suffix}-{case}"])
+                    self.assertNotIn("DO_NOT_PERSIST", json.dumps(result))
+
     def test_missing_observations_stay_unavailable(self):
         result, _ = self.attempt("missing-observations")
         self.assertEqual(result["collection"]["status"], "unavailable")

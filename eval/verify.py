@@ -18,13 +18,17 @@ import sys
 sys.dont_write_bytecode = True
 
 # Fixed public identifiers only: the runner allowlists these before retention.
+INVALID_ATTEMPT_CASES = (("zero", 0), ("negative", -1), ("bool", True),
+                         ("float", 1.5), ("string", "2"))
+
 CHECK_LABELS = {
     "bug-fix": {f"{kind}-{i}" for kind in ("ranges", "input-preserved") for i in range(5)},
     "multi-file-feature": {"grouped-revenue", "empty-revenue", "original-total", "cli-group", "cli-group-empty", "cli-total"},
     "test-diagnosis": {"successful-value", "attempt-count", "exhaustion", "exhaustion-counts",
                        "exception-filter-original", "nonretryable-single-call", "no-wait-on-other",
-                       "invalid-attempts", "invalid-attempts-no-call", "single-attempt",
-                       "original-final-exception", "custom-retry-type"},
+                       "single-attempt", "original-final-exception", "custom-retry-type"} | {
+                           f"invalid-attempts{suffix}-{case}" for case, _ in INVALID_ATTEMPT_CASES
+                           for suffix in ("", "-no-call")},
     "exploration-change": {"cli-precedence", "config-precedence", "env-precedence", "empty-env-is-explicit",
                            "ambient-env", "none-falls-through", "invalid-selected-value", "mapping-preservation"},
     "refactor": {f"quote_{kind}-{check}" for kind in ("regular", "student", "senior")
@@ -121,10 +125,11 @@ def test_diagnosis(checks, workspace):
         checks.check("exception-filter-original", False)
     checks.check("nonretryable-single-call", len(other_calls) == 1)
     checks.check("no-wait-on-other", waits == [])
-    for value in [0, -1, True, 1.5, "2"]:
+    for case, value in INVALID_ATTEMPT_CASES:
         invalid_calls = []
-        checks.raises("invalid-attempts", ValueError, lambda value=value: retry(lambda: invalid_calls.append(1), value))
-        checks.check("invalid-attempts-no-call", not invalid_calls)
+        checks.raises(f"invalid-attempts-{case}", ValueError,
+                      lambda value=value: retry(lambda: invalid_calls.append(1), value))
+        checks.check(f"invalid-attempts-no-call-{case}", not invalid_calls)
     checks.check("single-attempt", retry(lambda: 8, 1) == 8)
     custom_calls = []
     sentinel = KeyError("final")

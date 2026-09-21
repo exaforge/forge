@@ -1,0 +1,311 @@
+{
+  "binary": {
+    "architecture": "aarch64",
+    "os": "linux",
+    "sha256": "47fc80b16ccb113c1a3460a9cdde0afdb8bcae97dcb56557b42063822c68dfce"
+  },
+  "build_provenance": {
+    "binary": {
+      "architecture": "aarch64",
+      "os": "linux",
+      "sha256": "47fc80b16ccb113c1a3460a9cdde0afdb8bcae97dcb56557b42063822c68dfce"
+    },
+    "protoc": "29.3",
+    "recipe_sha256": {
+      "Dockerfile": "51def8941f359e3ecca2c427a156870386ee5e592839c11cce9325cf4f8ed3f0",
+      "Dockerfile.dockerignore": "c2b390d32eac37119019e678997425d1e7103b046b4fa3039eb7593a7d0707e4"
+    },
+    "rust": "1.94.0",
+    "schema_version": 1,
+    "source": {
+      "build_source_sha256": "41a461127fd2f46cf019cc0e6de165a75e900b8bd4ed3603f88dab2c93aad6be",
+      "revision": "ff916cfd9a985bbce8a8e2a24782a9fd1bd449bc",
+      "scope": "admitted Docker build source including uncommitted content; excludes git metadata and artifacts",
+      "source_files": 3223
+    },
+    "target_cpu": "generic"
+  },
+  "configuration": {
+    "adapter_sources_sha256": {
+      "adapter.py": "29d9488d1725ac109263e2ec936b07a0b6578491e67a177401ce43a6e65b9251",
+      "container_runner.py": "cb3e89f5d3c9607a67adc9905f9ee78ba773d63cf8c421f5e8e450396639af9d",
+      "fixtures.py": "b26be48be3ce7e06f5bde5b72abd5332399bb7bb27201865adaccc38d0d6d5e8",
+      "preflight.py": "aed1e22e8e6603d08ba04acfbd3fb75ea9659ac5c178dae2933dd661d883f233",
+      "run.py": "09a315eeaddef431e2f1cb438c7cd6332abc5457c9a6a9d288354cbacedbb248",
+      "verify.py": "7ed4073aaaf677e9dd38a6d90a9da987c8ed00fb6d75d18b6b3cd65d661d5da7"
+    },
+    "binary": {
+      "architecture": "aarch64",
+      "os": "linux",
+      "sha256": "47fc80b16ccb113c1a3460a9cdde0afdb8bcae97dcb56557b42063822c68dfce"
+    },
+    "effort": "medium",
+    "harbor_version": "0.23.0",
+    "max_turns": 30,
+    "model": "gpt-5.6-sol",
+    "optimization_env": {
+      "FORGE_BATCH_READS": "1",
+      "FORGE_COMPACT_TOOL_DESCRIPTIONS": "1",
+      "FORGE_CONTEXT_FAST_PATH": "1",
+      "FORGE_PROMPT_CACHE": "0",
+      "FORGE_ROUND_CONTEXT": "1",
+      "FORGE_TOOL_OUTPUT_BUDGET": "1",
+      "GROK_SAMPLER_SHARED_CLIENT": "1"
+    },
+    "profile": "forge-coding-v2",
+    "profile_sha256": "5d4af9fb70342972f05eb2e77f8bb5993a3cd716a0c55ab72d5a8a91dc50bbe7",
+    "sandbox": "harbor_docker; nested_forge_sandbox_off"
+  },
+  "environment": {
+    "attempts": 1,
+    "concurrency": 1,
+    "force_build_from_task_dockerfile": true,
+    "platform": "linux/aarch64",
+    "retries": 0
+  },
+  "forge": {
+    "collection": {
+      "discarded_records": 0
+    },
+    "harbor_usage": {
+      "cache_tokens": 3584,
+      "input_tokens": 12230,
+      "output_tokens": 1710
+    },
+    "metadata_complete": true,
+    "native": {
+      "attempt_count": 5,
+      "collector_health_complete": true,
+      "collector_reported_loss": false,
+      "duplicate_attempts": false,
+      "end_to_end_output_rate_samples": 5,
+      "first_generation_samples": 5,
+      "median_end_to_end_output_tokens_per_second": 39.13240725908787,
+      "median_first_generation_event_ms": 3686.537293,
+      "median_first_text_ms": 2341.740667,
+      "median_observed_output_tokens_per_second": 82.4627990928548,
+      "median_request_duration_ms": 5197.862253,
+      "output_rate_samples": 5,
+      "phase_summary": {
+        "headless": {
+          "median_duration_ms": 44526.045895,
+          "samples": 1
+        },
+        "prompt": {
+          "median_duration_ms": 44353.015812000005,
+          "samples": 1
+        },
+        "request_build": {
+          "median_duration_ms": 0.060666,
+          "samples": 5
+        },
+        "sampler_prepare": {
+          "median_duration_ms": 1.2208329999999998,
+          "samples": 5
+        },
+        "stream_drain": {
+          "median_duration_ms": 0.049875,
+          "samples": 5
+        },
+        "tool_dispatch": {
+          "median_duration_ms": 105.535666,
+          "samples": 5
+        },
+        "tool_prepare": {
+          "median_duration_ms": 0.5584795,
+          "samples": 4
+        }
+      },
+      "request_count": 5,
+      "retries_scheduled": 0,
+      "text_ttft_samples": 1,
+      "usage": {
+        "cache_creation_input_tokens": null,
+        "cached_input_tokens": 3584,
+        "input_tokens": 12230,
+        "observed_cache_creation_input_tokens": null,
+        "observed_cached_input_tokens": 3584,
+        "observed_input_tokens": 12230,
+        "observed_output_tokens": 1710,
+        "observed_reasoning_tokens": 653,
+        "observed_total_tokens": 13940,
+        "output_tokens": 1710,
+        "reasoning_tokens": 653,
+        "total_tokens": 13940
+      }
+    },
+    "process": {
+      "cleanup_ms": 0.05775,
+      "completed": true,
+      "duration_ms": 44739.983645,
+      "exit_code": 0,
+      "leader_exit_ms": 44739.908186,
+      "signal": null
+    },
+    "protocol": {
+      "completed": true,
+      "terminal_events": 1,
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cached_input_tokens": 3584,
+        "input_tokens": 8646,
+        "output_tokens": 1710,
+        "reasoning_tokens": 653,
+        "total_tokens": 13940
+      }
+    },
+    "requests": [
+      {
+        "attempt": 1,
+        "duration_ms": 2339.445334,
+        "end_to_end_output_tokens_per_second": 12.823552473742051,
+        "error_kind": null,
+        "first_generation_event_ms": 2127.256918,
+        "first_reasoning_ms": 2127.256918,
+        "first_response_event_ms": 992.1024170000001,
+        "first_text_ms": null,
+        "first_tool_delta_ms": 2212.003459,
+        "generated_content_event_count": 8,
+        "observed_output_tokens_per_second": 141.38377846225123,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 1792,
+          "input_tokens": 2093,
+          "output_tokens": 30,
+          "reasoning_tokens": 9,
+          "total_tokens": 2123
+        },
+        "status_code": null,
+        "usage_is_final": true
+      },
+      {
+        "attempt": 1,
+        "duration_ms": 5136.407752,
+        "end_to_end_output_tokens_per_second": 39.13240725908787,
+        "error_kind": null,
+        "first_generation_event_ms": 3686.537293,
+        "first_reasoning_ms": 3686.537293,
+        "first_response_event_ms": 898.398375,
+        "first_text_ms": null,
+        "first_tool_delta_ms": 5096.6384610000005,
+        "generated_content_event_count": 5,
+        "observed_output_tokens_per_second": 138.63307494286977,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 0,
+          "input_tokens": 2127,
+          "output_tokens": 201,
+          "reasoning_tokens": 91,
+          "total_tokens": 2328
+        },
+        "status_code": null,
+        "usage_is_final": true
+      },
+      {
+        "attempt": 1,
+        "duration_ms": 19022.191926000003,
+        "end_to_end_output_tokens_per_second": 41.74072068501954,
+        "error_kind": null,
+        "first_generation_event_ms": 7448.726795,
+        "first_reasoning_ms": 7448.726795,
+        "first_response_event_ms": 873.209501,
+        "first_text_ms": null,
+        "first_tool_delta_ms": 14303.567299,
+        "generated_content_event_count": 327,
+        "observed_output_tokens_per_second": 68.60520950404371,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 1792,
+          "input_tokens": 2275,
+          "output_tokens": 794,
+          "reasoning_tokens": 456,
+          "total_tokens": 3069
+        },
+        "status_code": null,
+        "usage_is_final": true
+      },
+      {
+        "attempt": 1,
+        "duration_ms": 12166.713297,
+        "end_to_end_output_tokens_per_second": 45.28749766264834,
+        "error_kind": null,
+        "first_generation_event_ms": 5484.9124600000005,
+        "first_reasoning_ms": 5484.9124600000005,
+        "first_response_event_ms": 811.207251,
+        "first_text_ms": null,
+        "first_tool_delta_ms": 5517.81846,
+        "generated_content_event_count": 440,
+        "observed_output_tokens_per_second": 82.4627990928548,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 0,
+          "input_tokens": 2631,
+          "output_tokens": 551,
+          "reasoning_tokens": 97,
+          "total_tokens": 3182
+        },
+        "status_code": null,
+        "usage_is_final": true
+      },
+      {
+        "attempt": 1,
+        "duration_ms": 5197.72471,
+        "end_to_end_output_tokens_per_second": 25.78051118063157,
+        "error_kind": null,
+        "first_generation_event_ms": 2341.740667,
+        "first_reasoning_ms": null,
+        "first_response_event_ms": 1578.1947089999999,
+        "first_text_ms": 2341.740667,
+        "first_tool_delta_ms": null,
+        "generated_content_event_count": 130,
+        "observed_output_tokens_per_second": 46.91902965229557,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 0,
+          "input_tokens": 3104,
+          "output_tokens": 134,
+          "reasoning_tokens": 0,
+          "total_tokens": 3238
+        },
+        "status_code": null,
+        "usage_is_final": true
+      }
+    ],
+    "run_id": "0859b2de-c6de-405d-9060-b42fc6e527ec"
+  },
+  "harbor_exception": false,
+  "harbor_exit_code": 0,
+  "harbor_failure": null,
+  "harbor_version": "0.23.0",
+  "launcher_sources_sha256": {
+    "launch.py": "a62f1a8d9e17d0813697762121a6f7e84d9eef65d16ccb20fbc43fea7c1015fd",
+    "preflight.py": "aed1e22e8e6603d08ba04acfbd3fb75ea9659ac5c178dae2933dd661d883f233"
+  },
+  "metadata_complete": true,
+  "metric_scope": {
+    "cost_usd": "unavailable; subscription usage is not an observed bill",
+    "input_tokens": "includes cached input; cache is a subset",
+    "native_usage": "sampler actor only; includes cached input and reasoning output",
+    "phases": "overlapping client intervals; not additive wall time",
+    "rates": "client observed approximation; not server decode speed",
+    "usage": "headless prompt ledger; auxiliary direct calls excluded"
+  },
+  "oracle": false,
+  "privacy": {
+    "mount_source_path_exported": false,
+    "raw_harbor_job_is_private": true,
+    "raw_harbor_job_retained": false
+  },
+  "schema_version": 1,
+  "task_files_sha256": "6976d55e0422c221d9e003c62b744bb4765fd9b02680b60e86f18dfb183baff0",
+  "task_files_unchanged": true,
+  "timing": {
+    "agent_execution_ms": 45176.483,
+    "agent_setup_ms": 2435.311,
+    "environment_setup_ms": 2379.061,
+    "trial_ms": 89554.326,
+    "verifier_ms": 28019.307
+  },
+  "verified_success": true,
+  "verifier_reward": 1.0
+}

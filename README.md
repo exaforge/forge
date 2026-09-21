@@ -99,8 +99,11 @@ A subsequent [ten-attempt check of four additional opt-in optimizations](eval/ev
 passed all five tasks under both profiles. Tool descriptions were 23.7% smaller,
 but the combined profile used more total tokens and took longer overall in that
 small sample. It is experimental; no additional task-speed improvement is claimed.
-The [Harbor integration](eval/harbor/README.md) provides a separate container-based
-path to external task verification.
+The [Harbor integration](eval/harbor/README.md) also passed a Linux ARM64 smoke
+test and one paired Terminal-Bench `cancel-async-tasks` pilot. Both profiles passed;
+Forge invocation time was 62.7 s for the previous profile and 44.7 s for the
+four-switch profile. That single pair does not establish a general improvement
+or a Terminal-Bench score. See the [retained Harbor evidence and timing boundaries](eval/evidence/2026-09-20/harbor/README.md).
 
 ## Authentication and models
 

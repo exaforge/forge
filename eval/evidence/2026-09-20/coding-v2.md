@@ -61,3 +61,22 @@ Retained manifests, results, and allowlisted events are in [coding-v2](coding-v2
 The aggregate is [coding-v2-aggregate.json](coding-v2-aggregate.json), reproducible
 without model calls using `python3 eval/evidence/2026-09-20/summarize-coding-v2.py`.
 The earlier 45-attempt snapshot is unchanged.
+
+## Next experiments
+
+Keep the previous profile as the reference. Test compact descriptions alone
+first: they have a measured context-size effect, but still need repeated task
+comparisons that include corrective calls and total usage. Alternate profile
+order and record cache usage; changing descriptions changes the cache prefix.
+
+Next test output budgets with a source file longer than 300 lines and a terminal
+log longer than 8,000 characters. Required evidence should occur beyond the
+initial window so success depends on recovering it. Count the additional reads
+as well as saved input. Then test batching on tasks that need multiple independent
+files before an edit, with a dependent read-after-write case to check ordering.
+
+Keep repeated-read reduction experimental. Its deterministic tests establish
+which copies are removed; live evaluation should use naturally occurring eligible
+reads. Forcing redundant reads would manufacture a benefit, and rewriting a past
+result can invalidate the cached suffix. All live comparisons should retain every
+attempt, use fixed model/effort, and repeat before claiming improvements.

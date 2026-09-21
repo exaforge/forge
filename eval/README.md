@@ -252,6 +252,13 @@ Overlapping request/tool/child phases must not be summed into elapsed wall time.
 
 The [2026-09-20 evaluation snapshot](evidence/2026-09-20/README.md) contains
 the first 45 trials and explains the observed speed, usage and quality tradeoff.
+The subsequent [ten-trial coding check](evidence/2026-09-20/coding-v2.md) compares
+the previous local-coding profile with all four new switches. Both passed every
+task; the combined profile did not improve total latency or token usage.
+
+For external container tasks, see the [pinned Harbor adapter](harbor/README.md).
+It uses the same profile definitions and numeric metadata parsers with separate
+environment, agent, verifier, and native-invocation timing boundaries.
 
 `summary.json` and `RESULTS.md` are updated after each attempt. The table shows
 successes/attempts, all-attempt elapsed median/range, successful-attempt median,

@@ -1,0 +1,21 @@
+{
+  "binary": {
+    "architecture": "aarch64",
+    "os": "linux",
+    "sha256": "47fc80b16ccb113c1a3460a9cdde0afdb8bcae97dcb56557b42063822c68dfce"
+  },
+  "protoc": "29.3",
+  "recipe_sha256": {
+    "Dockerfile": "51def8941f359e3ecca2c427a156870386ee5e592839c11cce9325cf4f8ed3f0",
+    "Dockerfile.dockerignore": "c2b390d32eac37119019e678997425d1e7103b046b4fa3039eb7593a7d0707e4"
+  },
+  "rust": "1.94.0",
+  "schema_version": 1,
+  "source": {
+    "build_source_sha256": "41a461127fd2f46cf019cc0e6de165a75e900b8bd4ed3603f88dab2c93aad6be",
+    "revision": "ff916cfd9a985bbce8a8e2a24782a9fd1bd449bc",
+    "scope": "admitted Docker build source including uncommitted content; excludes git metadata and artifacts",
+    "source_files": 3223
+  },
+  "target_cpu": "generic"
+}

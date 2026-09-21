@@ -1,0 +1,16 @@
+[
+  {
+    "repository": "https://github.com/harbor-framework/harbor",
+    "revision": "1e5c5c6db929a10a140d05e606882c671ae20729",
+    "tag": "v0.23.0",
+    "task": "examples/tasks/hello-world",
+    "checkout_clean": true
+  },
+  {
+    "repository": "https://github.com/harbor-framework/terminal-bench-2",
+    "revision": "2fd12b88aafdd04a52c298e3940bcb189f9766d6",
+    "tag": null,
+    "task": "cancel-async-tasks",
+    "checkout_clean": true
+  }
+]

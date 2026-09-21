@@ -1,0 +1,43 @@
+{
+  "binary": null,
+  "build_provenance": null,
+  "environment": {
+    "attempts": 1,
+    "concurrency": 1,
+    "force_build_from_task_dockerfile": true,
+    "platform": "linux/aarch64",
+    "retries": 0
+  },
+  "forge": null,
+  "harbor_exception": false,
+  "harbor_exit_code": 0,
+  "harbor_failure": null,
+  "harbor_version": "0.23.0",
+  "metadata_complete": true,
+  "metric_scope": {
+    "cost_usd": "unavailable; subscription usage is not an observed bill",
+    "input_tokens": "includes cached input; cache is a subset",
+    "native_usage": "sampler actor only; includes cached input and reasoning output",
+    "phases": "overlapping client intervals; not additive wall time",
+    "rates": "client observed approximation; not server decode speed",
+    "usage": "headless prompt ledger; auxiliary direct calls excluded"
+  },
+  "oracle": true,
+  "privacy": {
+    "mount_source_path_exported": false,
+    "raw_harbor_job_is_private": true,
+    "raw_harbor_job_retained": false
+  },
+  "schema_version": 1,
+  "task_files_sha256": "6976d55e0422c221d9e003c62b744bb4765fd9b02680b60e86f18dfb183baff0",
+  "task_files_unchanged": true,
+  "timing": {
+    "agent_execution_ms": 356.497,
+    "agent_setup_ms": 0.077,
+    "environment_setup_ms": 9977.565,
+    "trial_ms": 62775.061,
+    "verifier_ms": 40598.409
+  },
+  "verified_success": true,
+  "verifier_reward": 1.0
+}

@@ -1,0 +1,307 @@
+{
+  "binary": {
+    "architecture": "aarch64",
+    "os": "linux",
+    "sha256": "47fc80b16ccb113c1a3460a9cdde0afdb8bcae97dcb56557b42063822c68dfce"
+  },
+  "build_provenance": {
+    "binary": {
+      "architecture": "aarch64",
+      "os": "linux",
+      "sha256": "47fc80b16ccb113c1a3460a9cdde0afdb8bcae97dcb56557b42063822c68dfce"
+    },
+    "protoc": "29.3",
+    "recipe_sha256": {
+      "Dockerfile": "51def8941f359e3ecca2c427a156870386ee5e592839c11cce9325cf4f8ed3f0",
+      "Dockerfile.dockerignore": "c2b390d32eac37119019e678997425d1e7103b046b4fa3039eb7593a7d0707e4"
+    },
+    "rust": "1.94.0",
+    "schema_version": 1,
+    "source": {
+      "build_source_sha256": "41a461127fd2f46cf019cc0e6de165a75e900b8bd4ed3603f88dab2c93aad6be",
+      "revision": "ff916cfd9a985bbce8a8e2a24782a9fd1bd449bc",
+      "scope": "admitted Docker build source including uncommitted content; excludes git metadata and artifacts",
+      "source_files": 3223
+    },
+    "target_cpu": "generic"
+  },
+  "configuration": {
+    "adapter_sources_sha256": {
+      "adapter.py": "29d9488d1725ac109263e2ec936b07a0b6578491e67a177401ce43a6e65b9251",
+      "container_runner.py": "cb3e89f5d3c9607a67adc9905f9ee78ba773d63cf8c421f5e8e450396639af9d",
+      "fixtures.py": "b26be48be3ce7e06f5bde5b72abd5332399bb7bb27201865adaccc38d0d6d5e8",
+      "preflight.py": "aed1e22e8e6603d08ba04acfbd3fb75ea9659ac5c178dae2933dd661d883f233",
+      "run.py": "09a315eeaddef431e2f1cb438c7cd6332abc5457c9a6a9d288354cbacedbb248",
+      "verify.py": "7ed4073aaaf677e9dd38a6d90a9da987c8ed00fb6d75d18b6b3cd65d661d5da7"
+    },
+    "binary": {
+      "architecture": "aarch64",
+      "os": "linux",
+      "sha256": "47fc80b16ccb113c1a3460a9cdde0afdb8bcae97dcb56557b42063822c68dfce"
+    },
+    "effort": "medium",
+    "harbor_version": "0.23.0",
+    "max_turns": 30,
+    "model": "gpt-5.6-sol",
+    "optimization_env": {
+      "FORGE_CONTEXT_FAST_PATH": "1",
+      "FORGE_PROMPT_CACHE": "0",
+      "GROK_SAMPLER_SHARED_CLIENT": "1"
+    },
+    "profile": "forge-optimized",
+    "profile_sha256": "373af61c6e202fab3f8162adfd117d442e77161b49dbcbaa780346851e32895c",
+    "sandbox": "harbor_docker; nested_forge_sandbox_off"
+  },
+  "environment": {
+    "attempts": 1,
+    "concurrency": 1,
+    "force_build_from_task_dockerfile": true,
+    "platform": "linux/aarch64",
+    "retries": 0
+  },
+  "forge": {
+    "collection": {
+      "discarded_records": 0
+    },
+    "harbor_usage": {
+      "cache_tokens": 5760,
+      "input_tokens": 12978,
+      "output_tokens": 2458
+    },
+    "metadata_complete": true,
+    "native": {
+      "attempt_count": 5,
+      "collector_health_complete": true,
+      "collector_reported_loss": false,
+      "duplicate_attempts": false,
+      "end_to_end_output_rate_samples": 5,
+      "first_generation_samples": 5,
+      "median_end_to_end_output_tokens_per_second": 36.18556208643769,
+      "median_first_generation_event_ms": 6101.871211,
+      "median_first_text_ms": 2357.475793,
+      "median_observed_output_tokens_per_second": 112.9797295811081,
+      "median_request_duration_ms": 6494.478045,
+      "output_rate_samples": 5,
+      "phase_summary": {
+        "headless": {
+          "median_duration_ms": 62492.668237,
+          "samples": 1
+        },
+        "prompt": {
+          "median_duration_ms": 62324.113861,
+          "samples": 1
+        },
+        "request_build": {
+          "median_duration_ms": 0.039,
+          "samples": 5
+        },
+        "sampler_prepare": {
+          "median_duration_ms": 1.006875,
+          "samples": 5
+        },
+        "stream_drain": {
+          "median_duration_ms": 0.047083,
+          "samples": 5
+        },
+        "tool_dispatch": {
+          "median_duration_ms": 73.082083,
+          "samples": 4
+        },
+        "tool_prepare": {
+          "median_duration_ms": 0.8329375000000001,
+          "samples": 4
+        }
+      },
+      "request_count": 5,
+      "retries_scheduled": 0,
+      "text_ttft_samples": 1,
+      "usage": {
+        "cache_creation_input_tokens": null,
+        "cached_input_tokens": 5760,
+        "input_tokens": 12978,
+        "observed_cache_creation_input_tokens": null,
+        "observed_cached_input_tokens": 5760,
+        "observed_input_tokens": 12978,
+        "observed_output_tokens": 2458,
+        "observed_reasoning_tokens": 1476,
+        "observed_total_tokens": 15436,
+        "output_tokens": 2458,
+        "reasoning_tokens": 1476,
+        "total_tokens": 15436
+      }
+    },
+    "process": {
+      "cleanup_ms": 0.141417,
+      "completed": true,
+      "duration_ms": 62712.74582,
+      "exit_code": 0,
+      "leader_exit_ms": 62712.596487,
+      "signal": null
+    },
+    "protocol": {
+      "completed": true,
+      "terminal_events": 1,
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cached_input_tokens": 5760,
+        "input_tokens": 7218,
+        "output_tokens": 2458,
+        "reasoning_tokens": 1476,
+        "total_tokens": 15436
+      }
+    },
+    "requests": [
+      {
+        "attempt": 1,
+        "duration_ms": 3177.960293,
+        "end_to_end_output_tokens_per_second": 9.754684496305002,
+        "error_kind": null,
+        "first_generation_event_ms": 3014.9633759999997,
+        "first_reasoning_ms": 3014.9633759999997,
+        "first_response_event_ms": 976.662917,
+        "first_text_ms": null,
+        "first_tool_delta_ms": 3071.2687929999997,
+        "generated_content_event_count": 8,
+        "observed_output_tokens_per_second": 190.18764630989875,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 1920,
+          "input_tokens": 2271,
+          "output_tokens": 31,
+          "reasoning_tokens": 10,
+          "total_tokens": 2302
+        },
+        "status_code": null,
+        "usage_is_final": true
+      },
+      {
+        "attempt": 1,
+        "duration_ms": 6494.302878,
+        "end_to_end_output_tokens_per_second": 36.18556208643769,
+        "error_kind": null,
+        "first_generation_event_ms": 6101.871211,
+        "first_reasoning_ms": 6101.871211,
+        "first_response_event_ms": 910.655709,
+        "first_text_ms": null,
+        "first_tool_delta_ms": 6226.967878,
+        "generated_content_event_count": 32,
+        "observed_output_tokens_per_second": 598.8303691098394,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 1920,
+          "input_tokens": 2305,
+          "output_tokens": 235,
+          "reasoning_tokens": 189,
+          "total_tokens": 2540
+        },
+        "status_code": null,
+        "usage_is_final": true
+      },
+      {
+        "attempt": 1,
+        "duration_ms": 34331.303641,
+        "end_to_end_output_tokens_per_second": 44.1870782380757,
+        "error_kind": null,
+        "first_generation_event_ms": 7554.778296,
+        "first_reasoning_ms": 7554.778296,
+        "first_response_event_ms": 899.525501,
+        "first_text_ms": null,
+        "first_tool_delta_ms": 29346.635014,
+        "generated_content_event_count": 416,
+        "observed_output_tokens_per_second": 56.654102070912295,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 0,
+          "input_tokens": 2374,
+          "output_tokens": 1517,
+          "reasoning_tokens": 1093,
+          "total_tokens": 3891
+        },
+        "status_code": null,
+        "usage_is_final": true
+      },
+      {
+        "attempt": 1,
+        "duration_ms": 13309.11988,
+        "end_to_end_output_tokens_per_second": 42.15154758978698,
+        "error_kind": null,
+        "first_generation_event_ms": 8343.627379000001,
+        "first_reasoning_ms": 8343.627379000001,
+        "first_response_event_ms": 655.1493750000001,
+        "first_text_ms": null,
+        "first_tool_delta_ms": 8478.654087,
+        "generated_content_event_count": 363,
+        "observed_output_tokens_per_second": 112.9797295811081,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 0,
+          "input_tokens": 2816,
+          "output_tokens": 561,
+          "reasoning_tokens": 184,
+          "total_tokens": 3377
+        },
+        "status_code": null,
+        "usage_is_final": true
+      },
+      {
+        "attempt": 1,
+        "duration_ms": 4511.751668999999,
+        "end_to_end_output_tokens_per_second": 25.2673481085601,
+        "error_kind": null,
+        "first_generation_event_ms": 2357.475793,
+        "first_reasoning_ms": null,
+        "first_response_event_ms": 829.7569169999999,
+        "first_text_ms": 2357.475793,
+        "first_tool_delta_ms": null,
+        "generated_content_event_count": 110,
+        "observed_output_tokens_per_second": 52.918013551575434,
+        "provider_usage": {
+          "cache_creation_input_tokens": null,
+          "cached_input_tokens": 1920,
+          "input_tokens": 3212,
+          "output_tokens": 114,
+          "reasoning_tokens": 0,
+          "total_tokens": 3326
+        },
+        "status_code": null,
+        "usage_is_final": true
+      }
+    ],
+    "run_id": "afe4c3b3-9400-4b3f-9683-df41113daa44"
+  },
+  "harbor_exception": false,
+  "harbor_exit_code": 0,
+  "harbor_failure": null,
+  "harbor_version": "0.23.0",
+  "launcher_sources_sha256": {
+    "launch.py": "a62f1a8d9e17d0813697762121a6f7e84d9eef65d16ccb20fbc43fea7c1015fd",
+    "preflight.py": "aed1e22e8e6603d08ba04acfbd3fb75ea9659ac5c178dae2933dd661d883f233"
+  },
+  "metadata_complete": true,
+  "metric_scope": {
+    "cost_usd": "unavailable; subscription usage is not an observed bill",
+    "input_tokens": "includes cached input; cache is a subset",
+    "native_usage": "sampler actor only; includes cached input and reasoning output",
+    "phases": "overlapping client intervals; not additive wall time",
+    "rates": "client observed approximation; not server decode speed",
+    "usage": "headless prompt ledger; auxiliary direct calls excluded"
+  },
+  "oracle": false,
+  "privacy": {
+    "mount_source_path_exported": false,
+    "raw_harbor_job_is_private": true,
+    "raw_harbor_job_retained": false
+  },
+  "schema_version": 1,
+  "task_files_sha256": "6976d55e0422c221d9e003c62b744bb4765fd9b02680b60e86f18dfb183baff0",
+  "task_files_unchanged": true,
+  "timing": {
+    "agent_execution_ms": 63197.431000000004,
+    "agent_setup_ms": 2467.555,
+    "environment_setup_ms": 2736.97,
+    "trial_ms": 107738.699,
+    "verifier_ms": 27412.842999999997
+  },
+  "verified_success": true,
+  "verifier_reward": 1.0
+}

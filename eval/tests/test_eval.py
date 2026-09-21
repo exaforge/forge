@@ -282,6 +282,42 @@ class EvaluatorTests(unittest.TestCase):
                                for repetition in range(1, 4)]
                 self.assertEqual(sorted(at_position), ["a", "b", "c"])
 
+    def test_three_profile_schedule_balances_five_task_pair_precedence(self):
+        from collections import Counter
+        from itertools import combinations, product
+
+        names = ("a", "b", "c")
+        tasks = ("one", "two", "three", "four", "five")
+        rows = [(profile["id"], task, repetition)
+                for profile, task, repetition in run.schedule(
+                    [{"id": name} for name in names], tasks, 3)]
+        self.assertEqual(len(rows), 45)
+        self.assertEqual(Counter(rows), Counter(product(names, tasks, range(1, 4))))
+
+        groups = [rows[index:index + 3] for index in range(0, len(rows), 3)]
+        group_keys = []
+        task_positions = Counter()
+        global_positions = Counter()
+        precedence = Counter()
+        for group in groups:
+            keys = {(task, repetition) for _, task, repetition in group}
+            self.assertEqual(len(keys), 1, "matched profiles must stay adjacent")
+            task, repetition = keys.pop()
+            group_keys.append((task, repetition))
+            order = [name for name, _, _ in group]
+            self.assertCountEqual(order, names)
+            for position, name in enumerate(order):
+                task_positions[task, name, position] += 1
+                global_positions[name, position] += 1
+            for earlier, later in combinations(order, 2):
+                precedence[earlier, later] += 1
+
+        self.assertEqual(Counter(group_keys), Counter(product(tasks, range(1, 4))))
+        self.assertEqual(task_positions, Counter({key: 1 for key in product(tasks, names, range(3))}))
+        self.assertEqual(global_positions, Counter({key: 5 for key in product(names, range(3))}))
+        for first, second in combinations(names, 2):
+            self.assertEqual(sorted((precedence[first, second], precedence[second, first])), [7, 8])
+
     def test_timeout_kills_descendant_processes(self):
         started_file, survived_file = self.root / "started", self.root / "survived"
         child = "import sys,time;open(sys.argv[1],'w').write('ready');time.sleep(1.2);open(sys.argv[2],'w').write('alive');time.sleep(30)"

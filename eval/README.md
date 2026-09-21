@@ -167,10 +167,12 @@ external global configuration is not fully isolated. A Claude comparison changes
 both harness and model. Never interpret it as a pure inference-engine comparison.
 Even Forge versus Codex has different system prompts and tool implementations.
 
-Tasks are run serially in adjacent matched pairs. The runner alternates AB/BA
-between repetitions/tasks; for more profiles it rotates positions and reverses
-the order only after a complete rotation block. With three profiles and three
-repetitions, each profile occupies each position once for every task.
+Tasks are run serially in adjacent matched groups. The runner alternates AB/BA
+between repetitions/tasks; for more profiles it rotates positions, alternating
+rotation direction between tasks and after each complete rotation block. With
+three profiles and three repetitions, each profile occupies each position once
+for every task. Across five tasks, each profile occupies each position five times,
+and every pair runs in each relative order seven or eight times.
 This reduces a fixed order advantage but does not eliminate provider cache or
 account-quota effects. Provider cache state and quota are not reset or inferred.
 Keep usage/cache observations, report rate-limit failures, and avoid simultaneous

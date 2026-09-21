@@ -612,12 +612,12 @@ def run_attempt(profile, task_id, repetition, order, destination, limits, identi
 
 
 def schedule(profiles, tasks, repetitions):
-    """Adjacent matched tasks; rotate positions, reverse each full rotation block."""
+    """Adjacent matched tasks; rotate positions and alternate rotation direction."""
     for repetition in range(repetitions):
         for task_index, task in enumerate(tasks):
             shift = (repetition + task_index) % len(profiles)
             order = profiles[shift:] + profiles[:shift]
-            if len(profiles) > 2 and (repetition // len(profiles)) % 2:
+            if len(profiles) > 2 and (task_index + repetition // len(profiles)) % 2:
                 order = list(reversed(order))
             for profile in order:
                 yield profile, task, repetition + 1

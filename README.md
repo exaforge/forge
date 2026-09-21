@@ -105,6 +105,23 @@ Forge invocation time was 62.7 s for the previous profile and 44.7 s for the
 four-switch profile. That single pair does not establish a general improvement
 or a Terminal-Bench score. See the [retained Harbor evidence and timing boundaries](eval/evidence/2026-09-20/harbor/README.md).
 
+A [45-attempt compact-description comparison](eval/evidence/2026-09-20/compact-ablation.md)
+then isolated that switch and reran Codex with the same declared model/effort.
+
+| Configuration | Verified passes | Total task wall time | Input tokens including cache |
+|---|---:|---:|---:|
+| Existing Forge local-coding profile | 14/15 | 668.5 s | 346,219 |
+| Forge with compact descriptions only | 15/15 | 713.4 s | 346,965 |
+| Codex CLI | 15/15 | 599.5 s | 1,154,422 |
+
+Compact descriptions reduced first-request input by 8.5%, but used 6.7% more total
+wall time and essentially unchanged total input. They remain opt-in. Codex was
+faster overall and had a much larger cached-input share; these token totals do
+not establish cost savings. The Forge failure exposed an ambiguous exception
+contract in one fixture; the report retains its original score and explains
+the limitation. [Claude compatibility findings](eval/claude-compatibility.md)
+explain why no same-model Claude Code run is included.
+
 ## Authentication and models
 
 The exact model roster depends on the providers configured and authenticated for

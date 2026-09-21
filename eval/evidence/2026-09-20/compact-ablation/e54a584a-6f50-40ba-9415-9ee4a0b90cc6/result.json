@@ -1,0 +1,125 @@
+{
+  "collection": {
+    "discarded_records": 0,
+    "status": "observed"
+  },
+  "constraints": {
+    "changed_or_missing_provided_tests": [],
+    "provided_tests_unchanged": true
+  },
+  "execution": {
+    "cleanup_ms": 0.045625,
+    "duration_ms": 55514.94175,
+    "exit_code": 0,
+    "leader_exit_ms": 55514.890833,
+    "output_drain_ms": 0.068333,
+    "output_truncated": false,
+    "signal": null,
+    "started_at": "2026-09-21T00:37:50.814394+00:00",
+    "status": "completed"
+  },
+  "execution_order": 6,
+  "kind": "forge",
+  "native": {
+    "attempt_count": 8,
+    "collector_health_complete": true,
+    "collector_reported_loss": false,
+    "duplicate_attempts": false,
+    "end_to_end_output_rate_samples": 8,
+    "end_to_end_rate_scope": "reported output tokens / whole sampler attempt duration, including initial wait; not server decode speed",
+    "first_generation_samples": 8,
+    "median_end_to_end_output_tokens_per_second": 34.82831633606388,
+    "median_first_generation_event_ms": 3159.2264999999998,
+    "median_first_text_ms": 4404.2235,
+    "median_observed_output_tokens_per_second": 71.14374713403029,
+    "median_request_duration_ms": 6919.236062,
+    "observed_models": [
+      "gpt-5.6-sol"
+    ],
+    "output_rate_samples": 8,
+    "phase_scope": "observed overlapping client intervals; not additive wall-time or CPU breakdown",
+    "phase_summary": {
+      "headless": {
+        "median_duration_ms": 55296.4335,
+        "samples": 1
+      },
+      "prompt": {
+        "median_duration_ms": 54877.670416999994,
+        "samples": 1
+      },
+      "request_build": {
+        "median_duration_ms": 0.052375000000000005,
+        "samples": 8
+      },
+      "sampler_prepare": {
+        "median_duration_ms": 0.5975204999999999,
+        "samples": 8
+      },
+      "stream_drain": {
+        "median_duration_ms": 0.06285450000000001,
+        "samples": 8
+      },
+      "tool_dispatch": {
+        "median_duration_ms": 4.741167,
+        "samples": 16
+      },
+      "tool_prepare": {
+        "median_duration_ms": 1.157917,
+        "samples": 7
+      }
+    },
+    "rate_scope": "client-observed approximation, includes reported reasoning/tool output; not server decode speed",
+    "request_count": 8,
+    "retries_scheduled": 0,
+    "text_ttft_samples": 1,
+    "throughput_unavailable_reasons": {},
+    "total_tokens_scope": "provider-reported; may be context length, do not interpret as billed tokens",
+    "usage": {
+      "cache_creation_input_tokens": null,
+      "cached_input_tokens": 2944,
+      "input_tokens": 30602,
+      "observed_cache_creation_input_tokens": null,
+      "observed_cached_input_tokens": 2944,
+      "observed_input_tokens": 30602,
+      "observed_output_tokens": 1828,
+      "observed_reasoning_tokens": 372,
+      "observed_total_tokens": 32430,
+      "output_tokens": 1828,
+      "reasoning_tokens": 372,
+      "total_tokens": 32430
+    },
+    "usage_coverage": "complete_for_observed_sampler_attempts",
+    "usage_scope": "sampler_actor_only; input includes cache, output includes reasoning; auxiliary direct calls excluded"
+  },
+  "profile": "forge-compact-descriptions-only",
+  "protocol": {
+    "status": "completed",
+    "terminal_events": 1,
+    "usage": {
+      "cache_creation_input_tokens": 0,
+      "cached_input_tokens": 2944,
+      "input_tokens": 27658,
+      "output_tokens": 1828,
+      "reasoning_tokens": 372,
+      "total_tokens": 32430
+    },
+    "usage_coverage": "complete_for_reported_scope",
+    "usage_scope": "headless_prompt_ledger_uncached_input_auxiliary_calls_excluded"
+  },
+  "repetition": 1,
+  "run_id": "e54a584a-6f50-40ba-9415-9ee4a0b90cc6",
+  "schema_version": 1,
+  "successful_verified_run": true,
+  "task": "multi-file-feature",
+  "verification": {
+    "checks_passed": 6,
+    "checks_total": 6,
+    "duration_ms": 186.709666,
+    "error_category": null,
+    "failed_checks": [],
+    "integrity_preserved": true,
+    "passed": true,
+    "status": "passed",
+    "verifier_sha256": "7ed4073aaaf677e9dd38a6d90a9da987c8ed00fb6d75d18b6b3cd65d661d5da7"
+  }
+}

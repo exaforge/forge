@@ -1,0 +1,633 @@
+[
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 0,
+    "evidence": [
+      "c3198416-4fbe-48ce-a61b-a075c795ee65/result.json",
+      "c2c87b36-6177-4257-95e0-cdb059e1c9f1/result.json",
+      "60c24be7-c4a5-419e-ba0c-4dd52b1be3e1/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 35032.526334,
+    "median_all_elapsed_ms": 34475.462375,
+    "median_observed_requests": null,
+    "median_observed_retries": null,
+    "median_reported_cached_input": 64000,
+    "median_reported_input_including_cache": 78840,
+    "median_reported_output": 1132,
+    "median_run_median_end_to_end_output_tokens_per_second": null,
+    "median_run_median_first_generation_ms": null,
+    "median_run_median_output_tokens_per_second": null,
+    "median_run_median_text_ttft_ms": null,
+    "median_successful_elapsed_ms": 34475.462375,
+    "min_all_elapsed_ms": 32079.58725,
+    "native_usage_coverage": {
+      "unavailable": 3
+    },
+    "profile": "codex-direct",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "bug-fix",
+    "text_ttft_samples": 0,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 17,
+    "evidence": [
+      "b7490bb0-aedc-403f-96b4-93e2c182bd34/result.json",
+      "fe679eb9-101c-4265-873d-e72ee4170594/result.json",
+      "89724a84-f400-4080-8100-ff6d5e46b73e/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 41637.661334,
+    "median_all_elapsed_ms": 35187.251709,
+    "median_observed_requests": 6,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 3328,
+    "median_reported_input_including_cache": 18939,
+    "median_reported_output": 1078,
+    "median_run_median_end_to_end_output_tokens_per_second": 34.94932026437374,
+    "median_run_median_first_generation_ms": 3005.975375,
+    "median_run_median_output_tokens_per_second": 61.48404854287313,
+    "median_run_median_text_ttft_ms": 2142.414792,
+    "median_successful_elapsed_ms": 35187.251709,
+    "min_all_elapsed_ms": 29616.684667,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-compact-descriptions-only",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "bug-fix",
+    "text_ttft_samples": 3,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 17,
+    "evidence": [
+      "3db92be6-327c-441c-84c9-dbc0c235d378/result.json",
+      "6083682a-51f3-4a44-a727-04ea96f7efee/result.json",
+      "3b3a30d8-1727-49ed-a09f-14bb228f445f/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 33663.701625,
+    "median_all_elapsed_ms": 29798.447625,
+    "median_observed_requests": 6,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 6272,
+    "median_reported_input_including_cache": 17964,
+    "median_reported_output": 959,
+    "median_run_median_end_to_end_output_tokens_per_second": 30.053076256658084,
+    "median_run_median_first_generation_ms": 2486.415938,
+    "median_run_median_output_tokens_per_second": 70.36282958475172,
+    "median_run_median_text_ttft_ms": 1801.042625,
+    "median_successful_elapsed_ms": 29798.447625,
+    "min_all_elapsed_ms": 27812.374709,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-optimized",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "bug-fix",
+    "text_ttft_samples": 3,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 0,
+    "evidence": [
+      "4fa30b7e-c8ec-4326-918c-331d537aa2a9/result.json",
+      "720d8cae-baab-4c82-bdf8-b7fafebf566d/result.json",
+      "3fd60291-800d-492e-a35c-00c3b144be96/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 56659.396625,
+    "median_all_elapsed_ms": 46050.504417,
+    "median_observed_requests": null,
+    "median_observed_retries": null,
+    "median_reported_cached_input": 62080,
+    "median_reported_input_including_cache": 67061,
+    "median_reported_output": 1873,
+    "median_run_median_end_to_end_output_tokens_per_second": null,
+    "median_run_median_first_generation_ms": null,
+    "median_run_median_output_tokens_per_second": null,
+    "median_run_median_text_ttft_ms": null,
+    "median_successful_elapsed_ms": 46050.504417,
+    "min_all_elapsed_ms": 44648.168583,
+    "native_usage_coverage": {
+      "unavailable": 3
+    },
+    "profile": "codex-direct",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "exploration-change",
+    "text_ttft_samples": 0,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 21,
+    "evidence": [
+      "8f7cedda-9070-4f5e-9658-2f7c734c388a/result.json",
+      "cf2b688a-c0d4-4389-82c9-64c6b89569fb/result.json",
+      "63fbf6aa-848f-4130-a686-92f87e5741bb/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 86820.245542,
+    "median_all_elapsed_ms": 60145.512708,
+    "median_observed_requests": 6,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 4992,
+    "median_reported_input_including_cache": 23429,
+    "median_reported_output": 2252,
+    "median_run_median_end_to_end_output_tokens_per_second": 39.636459003693254,
+    "median_run_median_first_generation_ms": 5247.851791,
+    "median_run_median_output_tokens_per_second": 85.77909646133949,
+    "median_run_median_text_ttft_ms": 2054.1170420000003,
+    "median_successful_elapsed_ms": 60145.512708,
+    "min_all_elapsed_ms": 50401.333875,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-compact-descriptions-only",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "exploration-change",
+    "text_ttft_samples": 3,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 22,
+    "evidence": [
+      "1a975ab1-4881-469b-9b87-67cae7a85f47/result.json",
+      "021bf84d-e10a-4a7b-a051-c2399fa40467/result.json",
+      "ca63963f-c87a-4c2c-b8cb-8cf1475b46d0/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 82708.98725,
+    "median_all_elapsed_ms": 58277.079083,
+    "median_observed_requests": 7,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 13440,
+    "median_reported_input_including_cache": 29108,
+    "median_reported_output": 2298,
+    "median_run_median_end_to_end_output_tokens_per_second": 36.73349560137467,
+    "median_run_median_first_generation_ms": 2993.6013749999997,
+    "median_run_median_output_tokens_per_second": 67.36052628562626,
+    "median_run_median_text_ttft_ms": 2320.5676249999997,
+    "median_successful_elapsed_ms": 58277.079083,
+    "min_all_elapsed_ms": 57538.304208,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-optimized",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "exploration-change",
+    "text_ttft_samples": 3,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 0,
+    "evidence": [
+      "baff4c4b-6617-469b-8945-a2a066df6a13/result.json",
+      "59856adc-89ad-496f-87d2-475380de5f0b/result.json",
+      "0ba152c8-ba96-42e8-a654-fa11958c7fa9/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 36172.501333,
+    "median_all_elapsed_ms": 35192.673333,
+    "median_observed_requests": null,
+    "median_observed_retries": null,
+    "median_reported_cached_input": 51200,
+    "median_reported_input_including_cache": 65838,
+    "median_reported_output": 1217,
+    "median_run_median_end_to_end_output_tokens_per_second": null,
+    "median_run_median_first_generation_ms": null,
+    "median_run_median_output_tokens_per_second": null,
+    "median_run_median_text_ttft_ms": null,
+    "median_successful_elapsed_ms": 35192.673333,
+    "min_all_elapsed_ms": 33020.393667,
+    "native_usage_coverage": {
+      "unavailable": 3
+    },
+    "profile": "codex-direct",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "multi-file-feature",
+    "text_ttft_samples": 0,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 21,
+    "evidence": [
+      "e54a584a-6f50-40ba-9415-9ee4a0b90cc6/result.json",
+      "3924794f-de02-4d2d-9bf5-57a02a0c4132/result.json",
+      "bcb4a894-5cec-4aac-b838-2e2df1221294/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 59427.612083,
+    "median_all_elapsed_ms": 55514.94175,
+    "median_observed_requests": 8,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 9344,
+    "median_reported_input_including_cache": 28700,
+    "median_reported_output": 1597,
+    "median_run_median_end_to_end_output_tokens_per_second": 30.619688442976013,
+    "median_run_median_first_generation_ms": 3545.5343545000005,
+    "median_run_median_output_tokens_per_second": 75.96007740587478,
+    "median_run_median_text_ttft_ms": 4404.2235,
+    "median_successful_elapsed_ms": 55514.94175,
+    "min_all_elapsed_ms": 37237.843792,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-compact-descriptions-only",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "multi-file-feature",
+    "text_ttft_samples": 3,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 20,
+    "evidence": [
+      "37100186-5b44-41fe-bc74-92150ed99190/result.json",
+      "a4d3e538-e3f2-4347-b505-e59d52d472b2/result.json",
+      "2cea66dc-3574-403c-bc4f-8659b32f7f7c/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 43740.931375,
+    "median_all_elapsed_ms": 40712.22975,
+    "median_observed_requests": 7,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 9600,
+    "median_reported_input_including_cache": 25295,
+    "median_reported_output": 1343,
+    "median_run_median_end_to_end_output_tokens_per_second": 34.32988233158883,
+    "median_run_median_first_generation_ms": 3571.864709,
+    "median_run_median_output_tokens_per_second": 70.030389176745,
+    "median_run_median_text_ttft_ms": 1537.578,
+    "median_successful_elapsed_ms": 40712.22975,
+    "min_all_elapsed_ms": 40503.352458,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-optimized",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "multi-file-feature",
+    "text_ttft_samples": 3,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 0,
+    "evidence": [
+      "83ead764-7a12-446e-b923-50fa252044fa/result.json",
+      "969ebd88-bbe4-4502-8de1-fab64e9227ce/result.json",
+      "d2dbde7f-e6c9-4ede-b868-9b12b4cdaf60/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 46309.32675,
+    "median_all_elapsed_ms": 43760.617917,
+    "median_observed_requests": null,
+    "median_observed_retries": null,
+    "median_reported_cached_input": 79232,
+    "median_reported_input_including_cache": 95094,
+    "median_reported_output": 1643,
+    "median_run_median_end_to_end_output_tokens_per_second": null,
+    "median_run_median_first_generation_ms": null,
+    "median_run_median_output_tokens_per_second": null,
+    "median_run_median_text_ttft_ms": null,
+    "median_successful_elapsed_ms": 43760.617917,
+    "min_all_elapsed_ms": 40012.552375,
+    "native_usage_coverage": {
+      "unavailable": 3
+    },
+    "profile": "codex-direct",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "refactor",
+    "text_ttft_samples": 0,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 17,
+    "evidence": [
+      "30db279b-ebb4-45cb-85eb-3362d7fe9209/result.json",
+      "c2a1e5e7-033b-4a48-a9c3-b58d914721f3/result.json",
+      "0449c037-3934-468f-99b4-b219221131e8/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 47023.570166,
+    "median_all_elapsed_ms": 39917.589125,
+    "median_observed_requests": 6,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 6656,
+    "median_reported_input_including_cache": 23745,
+    "median_reported_output": 1416,
+    "median_run_median_end_to_end_output_tokens_per_second": 32.25412570107804,
+    "median_run_median_first_generation_ms": 3591.435291,
+    "median_run_median_output_tokens_per_second": 69.35213345039584,
+    "median_run_median_text_ttft_ms": 1562.631334,
+    "median_successful_elapsed_ms": 39917.589125,
+    "min_all_elapsed_ms": 39467.985625,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-compact-descriptions-only",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "refactor",
+    "text_ttft_samples": 3,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 14,
+    "evidence": [
+      "495e30b4-02c7-4c43-83d2-ef5c65247f07/result.json",
+      "5526037e-613f-48ca-9c09-4a90a521fea3/result.json",
+      "b0a547c5-9c1f-45d9-b0a1-a9b6c60eb22c/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 38226.397292,
+    "median_all_elapsed_ms": 32824.579083,
+    "median_observed_requests": 5,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 7680,
+    "median_reported_input_including_cache": 17824,
+    "median_reported_output": 1158,
+    "median_run_median_end_to_end_output_tokens_per_second": 35.85946929884413,
+    "median_run_median_first_generation_ms": 3414.5710839999997,
+    "median_run_median_output_tokens_per_second": 72.37930569020091,
+    "median_run_median_text_ttft_ms": 3093.797,
+    "median_successful_elapsed_ms": 32824.579083,
+    "min_all_elapsed_ms": 32764.215167,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-optimized",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "refactor",
+    "text_ttft_samples": 3,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 0,
+    "evidence": [
+      "6b6cc8a4-9bf8-4ba3-89d2-f9bf6feb8d64/result.json",
+      "3e16527e-d3b8-4408-9670-c9ea97346d19/result.json",
+      "e47373d7-f50b-47aa-9b16-1b6d6c9345bf/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 45538.229916,
+    "median_all_elapsed_ms": 35316.816792,
+    "median_observed_requests": null,
+    "median_observed_retries": null,
+    "median_reported_cached_input": 61184,
+    "median_reported_input_including_cache": 65715,
+    "median_reported_output": 1410,
+    "median_run_median_end_to_end_output_tokens_per_second": null,
+    "median_run_median_first_generation_ms": null,
+    "median_run_median_output_tokens_per_second": null,
+    "median_run_median_text_ttft_ms": null,
+    "median_successful_elapsed_ms": 35316.816792,
+    "min_all_elapsed_ms": 35264.968708,
+    "native_usage_coverage": {
+      "unavailable": 3
+    },
+    "profile": "codex-direct",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "test-diagnosis",
+    "text_ttft_samples": 0,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 17,
+    "evidence": [
+      "9f236094-79e4-4d86-85d5-da295c91c0fe/result.json",
+      "f837203f-b38d-48b2-b0dd-9c7ce093bf80/result.json",
+      "cb651025-daab-4a24-bf72-08f1ac797582/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 44826.562958,
+    "median_all_elapsed_ms": 44506.336208,
+    "median_observed_requests": 6,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 6656,
+    "median_reported_input_including_cache": 21190,
+    "median_reported_output": 1637,
+    "median_run_median_end_to_end_output_tokens_per_second": 37.43943587165964,
+    "median_run_median_first_generation_ms": 3318.39975,
+    "median_run_median_output_tokens_per_second": 74.81508370899947,
+    "median_run_median_text_ttft_ms": 2729.531042,
+    "median_successful_elapsed_ms": 44506.336208,
+    "min_all_elapsed_ms": 41642.88075,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-compact-descriptions-only",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 1.0,
+    "successful_verified_runs": 3,
+    "task": "test-diagnosis",
+    "text_ttft_samples": 3,
+    "verified_passes": 3,
+    "verifier_statuses": {
+      "passed": 3
+    }
+  },
+  {
+    "attempts": 3,
+    "constraint_failures": 0,
+    "end_to_end_output_rate_samples": 19,
+    "evidence": [
+      "356fe5aa-832c-4a3c-b506-a99c0af5ff38/result.json",
+      "f4ba3cc5-35a5-4d2e-b606-5c56cd9e0a10/result.json",
+      "4a2b8cf0-2c9b-481e-b18b-e7de9627d8ca/result.json"
+    ],
+    "execution_statuses": {
+      "completed": 3
+    },
+    "max_all_elapsed_ms": 52312.157375,
+    "median_all_elapsed_ms": 50970.565625,
+    "median_observed_requests": 6,
+    "median_observed_retries": 0,
+    "median_reported_cached_input": 11520,
+    "median_reported_input_including_cache": 23667,
+    "median_reported_output": 1640,
+    "median_run_median_end_to_end_output_tokens_per_second": 31.950699346399155,
+    "median_run_median_first_generation_ms": 4468.1955835,
+    "median_run_median_output_tokens_per_second": 93.97696945351338,
+    "median_run_median_text_ttft_ms": 1926.332041,
+    "median_successful_elapsed_ms": 51641.3615,
+    "min_all_elapsed_ms": 46615.253209,
+    "native_usage_coverage": {
+      "complete_for_observed_sampler_attempts": 3
+    },
+    "profile": "forge-optimized",
+    "protocol_usage_coverage": {
+      "complete_for_reported_scope": 3
+    },
+    "reported_usage_samples": 3,
+    "success_rate": 0.6666666666666666,
+    "successful_verified_runs": 2,
+    "task": "test-diagnosis",
+    "text_ttft_samples": 3,
+    "verified_passes": 2,
+    "verifier_statuses": {
+      "failed": 1,
+      "passed": 2
+    }
+  }
+]

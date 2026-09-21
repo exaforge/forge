@@ -257,6 +257,13 @@ the first 45 trials and explains the observed speed, usage and quality tradeoff.
 The subsequent [ten-trial coding check](evidence/2026-09-20/coding-v2.md) compares
 the previous local-coding profile with all four new switches. Both passed every
 task; the combined profile did not improve total latency or token usage.
+The [45-trial compact-description comparison](evidence/2026-09-20/compact-ablation.md)
+isolates that switch with three repetitions and includes a fresh Codex reference.
+It reduced first-request input but did not improve total task time or input usage.
+The report retains the original verifier failure, its task-contract ambiguity,
+paired comparisons, coverage counts, and all attempt metadata.
+See [Claude compatibility](claude-compatibility.md) for the investigated protocol
+and authentication boundaries; no unvalidated proxy is part of these results.
 
 For external container tasks, see the [pinned Harbor adapter](harbor/README.md).
 It uses the same profile definitions and numeric metadata parsers with separate

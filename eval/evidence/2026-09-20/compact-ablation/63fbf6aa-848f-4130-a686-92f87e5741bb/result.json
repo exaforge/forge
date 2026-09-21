@@ -1,0 +1,125 @@
+{
+  "collection": {
+    "discarded_records": 0,
+    "status": "observed"
+  },
+  "constraints": {
+    "changed_or_missing_provided_tests": [],
+    "provided_tests_unchanged": true
+  },
+  "execution": {
+    "cleanup_ms": 0.058459,
+    "duration_ms": 60145.512708,
+    "exit_code": 0,
+    "leader_exit_ms": 60145.44725,
+    "output_drain_ms": 0.100042,
+    "output_truncated": false,
+    "signal": null,
+    "started_at": "2026-09-21T01:03:03.247270+00:00",
+    "status": "completed"
+  },
+  "execution_order": 40,
+  "kind": "forge",
+  "native": {
+    "attempt_count": 6,
+    "collector_health_complete": true,
+    "collector_reported_loss": false,
+    "duplicate_attempts": false,
+    "end_to_end_output_rate_samples": 6,
+    "end_to_end_rate_scope": "reported output tokens / whole sampler attempt duration, including initial wait; not server decode speed",
+    "first_generation_samples": 6,
+    "median_end_to_end_output_tokens_per_second": 39.636459003693254,
+    "median_first_generation_event_ms": 5368.159395500001,
+    "median_first_text_ms": 5242.936417,
+    "median_observed_output_tokens_per_second": 86.06637312779935,
+    "median_request_duration_ms": 7672.8216875,
+    "observed_models": [
+      "gpt-5.6-sol"
+    ],
+    "output_rate_samples": 6,
+    "phase_scope": "observed overlapping client intervals; not additive wall-time or CPU breakdown",
+    "phase_summary": {
+      "headless": {
+        "median_duration_ms": 59905.806708000004,
+        "samples": 1
+      },
+      "prompt": {
+        "median_duration_ms": 59617.73625,
+        "samples": 1
+      },
+      "request_build": {
+        "median_duration_ms": 0.062792,
+        "samples": 6
+      },
+      "sampler_prepare": {
+        "median_duration_ms": 0.584458,
+        "samples": 6
+      },
+      "stream_drain": {
+        "median_duration_ms": 0.07254150000000001,
+        "samples": 6
+      },
+      "tool_dispatch": {
+        "median_duration_ms": 9.249833,
+        "samples": 13
+      },
+      "tool_prepare": {
+        "median_duration_ms": 1.295333,
+        "samples": 5
+      }
+    },
+    "rate_scope": "client-observed approximation, includes reported reasoning/tool output; not server decode speed",
+    "request_count": 6,
+    "retries_scheduled": 0,
+    "text_ttft_samples": 1,
+    "throughput_unavailable_reasons": {},
+    "total_tokens_scope": "provider-reported; may be context length, do not interpret as billed tokens",
+    "usage": {
+      "cache_creation_input_tokens": null,
+      "cached_input_tokens": 4992,
+      "input_tokens": 23185,
+      "observed_cache_creation_input_tokens": null,
+      "observed_cached_input_tokens": 4992,
+      "observed_input_tokens": 23185,
+      "observed_output_tokens": 2252,
+      "observed_reasoning_tokens": 779,
+      "observed_total_tokens": 25437,
+      "output_tokens": 2252,
+      "reasoning_tokens": 779,
+      "total_tokens": 25437
+    },
+    "usage_coverage": "complete_for_observed_sampler_attempts",
+    "usage_scope": "sampler_actor_only; input includes cache, output includes reasoning; auxiliary direct calls excluded"
+  },
+  "profile": "forge-compact-descriptions-only",
+  "protocol": {
+    "status": "completed",
+    "terminal_events": 1,
+    "usage": {
+      "cache_creation_input_tokens": 0,
+      "cached_input_tokens": 4992,
+      "input_tokens": 18193,
+      "output_tokens": 2252,
+      "reasoning_tokens": 779,
+      "total_tokens": 25437
+    },
+    "usage_coverage": "complete_for_reported_scope",
+    "usage_scope": "headless_prompt_ledger_uncached_input_auxiliary_calls_excluded"
+  },
+  "repetition": 3,
+  "run_id": "63fbf6aa-848f-4130-a686-92f87e5741bb",
+  "schema_version": 1,
+  "successful_verified_run": true,
+  "task": "exploration-change",
+  "verification": {
+    "checks_passed": 16,
+    "checks_total": 16,
+    "duration_ms": 79.047334,
+    "error_category": null,
+    "failed_checks": [],
+    "integrity_preserved": true,
+    "passed": true,
+    "status": "passed",
+    "verifier_sha256": "7ed4073aaaf677e9dd38a6d90a9da987c8ed00fb6d75d18b6b3cd65d661d5da7"
+  }
+}
